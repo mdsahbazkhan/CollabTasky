@@ -17,17 +17,18 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Shield, User, Sparkles } from "lucide-react";
 import { getProjects } from "@/src/services/project.service";
+import { getTasksByProject } from "@/src/services/task.service";
 
 export default function DashboardPage() {
   const { user, isAdmin } = useUser();
   const [projects, setProjects] = useState<any[]>([]);
+  const [activeTasks, setActiveTasks] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const data = await getProjects();
-        console.log("Fetched projects:", data.projects);
         setProjects(data);
         setLoading(false);
       } catch (error) {
@@ -38,6 +39,24 @@ export default function DashboardPage() {
 
     fetchProjects();
   }, []);
+  useEffect(() => {
+    const fetchTasks = async () => {
+      let active = 0;
+      for (const project of projects) {
+        const tasks = await getTasksByProject(project._id);
+        const projectActive = tasks.filter(
+          (task: any) => task.status !== "completed",
+        ).length;
+        active += projectActive;
+      }
+
+      setActiveTasks(active);
+    };
+
+    if (projects.length > 0) {
+      fetchTasks();
+    }
+  }, [projects]);
   return (
     <DashboardLayout title="Dashboard">
       <div className="space-y-6">
@@ -74,13 +93,17 @@ export default function DashboardPage() {
         </Card>
 
         {/* Stats Overview */}
-        <StatsCards loading={loading} projects={projects} />
+        <StatsCards
+          loading={loading}
+          projects={projects}
+          activeTasks={activeTasks}
+        />
 
         {/* Main Content Grid */}
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Project Overview - Takes 2 columns */}
           <div className="lg:col-span-2">
-            <ProjectOverview projects={projects}/>
+            <ProjectOverview projects={projects} />
           </div>
 
           {/* Activity Feed - Takes 1 column */}

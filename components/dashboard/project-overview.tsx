@@ -31,31 +31,30 @@ function getStatusColor(status: string) {
 export function ProjectOverview({ projects }: { projects: any[] }) {
   const [taskMap, setTaskMap] = useState<{ [key: string]: number }>({});
   useEffect(() => {
-  const fetchTasks = async () => {
-    const map: any = {};
+    const fetchTasks = async () => {
+      const map: any = {};
 
-    for (const project of projects) {
-      const tasks = await getTasksByProject(project._id);
+      for (const project of projects) {
+        const tasks = await getTasksByProject(project._id);
 
-      const total = tasks.length;
+        const total = tasks.length;
+        const completed = tasks.filter(
+          (task: any) => task.status === "completed",
+        ).length;
 
-      const completed = tasks.filter(
-        (task: any) => task.status === "completed"
-      ).length;
+        const progress =
+          total === 0 ? 0 : Math.round((completed / total) * 100);
 
-      const progress =
-        total === 0 ? 0 : Math.round((completed / total) * 100);
+        map[project._id] = progress;
+      }
 
-      map[project._id] = progress;
+      setTaskMap(map);
+    };
+
+    if (projects.length > 0) {
+      fetchTasks();
     }
-
-    setTaskMap(map);
-  };
-
-  if (projects.length > 0) {
-    fetchTasks();
-  }
-}, [projects]);
+  }, [projects]);
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -69,50 +68,51 @@ export function ProjectOverview({ projects }: { projects: any[] }) {
       </CardHeader>
       <CardContent className="space-y-4">
         {projects.map((project) => {
-            const progress = taskMap[project._id] || 0;
-          <div
-            key={project._id}
-            className="flex flex-col gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-muted/50"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/projects/${project._id}`}
-                    className="font-semibold text-foreground hover:text-primary"
-                  >
-                    {project.name}
-                  </Link>
-                  <Badge
-                    variant="secondary"
-                    className={getStatusColor(project.status)}
-                  >
-                    {project.status.toUpperCase()}
-                  </Badge>
+          const progress = taskMap[project._id] || 0;
+          return (
+            <div
+              key={project._id}
+              className="flex flex-col gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-muted/50"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/projects/${project._id}`}
+                      className="font-semibold text-foreground hover:text-primary"
+                    >
+                      {project.name}
+                    </Link>
+                    <Badge
+                      variant="secondary"
+                      className={getStatusColor(project.status)}
+                    >
+                      {project.status.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground line-clamp-1">
+                    {project.description}
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground line-clamp-1">
-                  {project.description}
-                </p>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="h-4 w-4" />
+                      <span className="sr-only">Open menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem>View details</DropdownMenuItem>
+                    <DropdownMenuItem>Edit project</DropdownMenuItem>
+                    <DropdownMenuItem>Archive</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only">Open menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>View details</DropdownMenuItem>
-                  <DropdownMenuItem>Edit project</DropdownMenuItem>
-                  <DropdownMenuItem>Archive</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
 
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="flex -space-x-2">
-                  {/* {project.members.slice(0, 3).map((member, idx) => (
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex -space-x-2">
+                    {/* {project.members.slice(0, 3).map((member, idx) => (
                     <Avatar
                       key={idx}
                       className="h-7 w-7 border-2 border-background"
@@ -124,31 +124,36 @@ export function ProjectOverview({ projects }: { projects: any[] }) {
                     </Avatar>
                   ))}
                    */}
-                  {project.members.slice(0, 3).map((_:any, idx:any) => (
-                    <Avatar key={idx}>
-                      <AvatarFallback className="text-xs bg-primary text-primary-foreground">U{idx + 1}</AvatarFallback>
-                    </Avatar>
-                  ))}
-                  {project.members.length > 3 && (
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-muted text-xs font-medium">
-                      +{project.members.length - 3}
-                    </div>
-                  )}
+                    {project.members.slice(0, 3).map((_: any, idx: any) => (
+                      <Avatar key={idx}>
+                        <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                          U{idx + 1}
+                        </AvatarFallback>
+                      </Avatar>
+                    ))}
+                    {project.members.length > 3 && (
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-muted text-xs font-medium">
+                        +{project.members.length - 3}
+                      </div>
+                    )}
+                  </div>
                 </div>
+                <span className="text-sm text-muted-foreground">
+                  Due {new Date(project.endDate).toLocaleDateString()}
+                </span>
               </div>
-              <span className="text-sm text-muted-foreground">
-                Due {new Date(project.endDate).toLocaleDateString()}
-              </span>
-            </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium text-foreground">{progress}%</span>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Progress</span>
+                  <span className="font-medium text-foreground">
+                    {progress}%
+                  </span>
+                </div>
+                <Progress value={progress} className="h-2" />
               </div>
-              <Progress value={progress} className="h-2" />
             </div>
-          </div>
+          );
         })}
       </CardContent>
     </Card>

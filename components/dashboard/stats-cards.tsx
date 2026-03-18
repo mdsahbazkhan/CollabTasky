@@ -11,7 +11,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
-export function StatsCards({ projects }: { projects: any[] }) {
+export function StatsCards({
+  projects,
+  activeTasks,
+  loading,
+}: {
+  projects: any[];
+  activeTasks: number;
+  loading?: boolean;
+}) {
   const stats = [
     {
       name: "Total Projects",
@@ -22,8 +30,8 @@ export function StatsCards({ projects }: { projects: any[] }) {
     },
     {
       name: "Active Tasks",
-      value: 0, // we update later
-      change: "+0",
+      value: activeTasks,
+      change: "0",
       changeType: "positive" as const,
       icon: CheckSquare,
     },
