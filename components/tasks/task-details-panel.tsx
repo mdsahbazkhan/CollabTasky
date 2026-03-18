@@ -1,0 +1,279 @@
+"use client";
+
+import * as React from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Calendar,
+  Clock,
+  Edit,
+  FolderKanban,
+  MessageSquare,
+  Tag,
+  Trash2,
+  User,
+} from "lucide-react";
+import { cn } from "@/src/lib/utils";
+import type { Task } from "@/app/(dashboard)/tasks/page";
+
+interface TaskDetailsPanelProps {
+  task: Task | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+function getPriorityColor(priority: string) {
+  switch (priority) {
+    case "Urgent":
+      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+    case "High":
+      return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400";
+    case "Medium":
+      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+    case "Low":
+      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+    default:
+      return "bg-secondary text-secondary-foreground";
+  }
+}
+
+function getStatusColor(status: string) {
+  switch (status) {
+    case "todo":
+      return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+    case "in-progress":
+      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+    case "done":
+      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+    default:
+      return "bg-secondary text-secondary-foreground";
+  }
+}
+
+const statusLabels: Record<string, string> = {
+  todo: "To Do",
+  "in-progress": "In Progress",
+  done: "Done",
+};
+
+const comments = [
+  {
+    id: "1",
+    user: { name: "Sarah Chen", initials: "SC" },
+    content:
+      "I've started working on the initial designs. Should have something ready for review by tomorrow.",
+    time: "2 hours ago",
+  },
+  {
+    id: "2",
+    user: { name: "John Doe", initials: "JD" },
+    content:
+      "Great! Let me know if you need any clarification on the requirements.",
+    time: "1 hour ago",
+  },
+];
+
+export function TaskDetailsPanel({
+  task,
+  open,
+  onOpenChange,
+}: TaskDetailsPanelProps) {
+  const [comment, setComment] = React.useState("");
+
+  if (!task) return null;
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <div className="flex items-center justify-between">
+            <SheetTitle className="text-xl">{task.title}</SheetTitle>
+          </div>
+          <SheetDescription className="sr-only">
+            Task details and actions
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="mt-6 space-y-6">
+          {/* Status & Priority */}
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className={getStatusColor(task.status)}>
+              {statusLabels[task.status]}
+            </Badge>
+            <Badge
+              variant="secondary"
+              className={cn(getPriorityColor(task.priority))}
+            >
+              {task.priority}
+            </Badge>
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-foreground">Description</h4>
+            <p className="text-sm text-muted-foreground">{task.description}</p>
+          </div>
+
+          <Separator />
+
+          {/* Details Grid */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                <User className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">Assignee</p>
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-5 w-5">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {task.assignee.initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium text-foreground">
+                    {task.assignee.name}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                <FolderKanban className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">Project</p>
+                <span className="text-sm font-medium text-foreground">
+                  {task.project}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">Due Date</p>
+                <span className="text-sm font-medium text-foreground">
+                  {task.dueDate}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                <Tag className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">Tags</p>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {task.tags.map((tag) => (
+                    <Badge key={tag} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">Status</p>
+                <Select defaultValue={task.status}>
+                  <SelectTrigger className="h-8 w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todo">To Do</SelectItem>
+                    <SelectItem value="in-progress">In Progress</SelectItem>
+                    <SelectItem value="done">Done</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Comments */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <h4 className="text-sm font-medium text-foreground">Comments</h4>
+            </div>
+
+            <div className="space-y-4">
+              {comments.map((c) => (
+                <div key={c.id} className="flex gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {c.user.initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-foreground">
+                        {c.user.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {c.time}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{c.content}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-2">
+              <Textarea
+                placeholder="Add a comment..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={3}
+              />
+              <Button size="sm" disabled={!comment.trim()}>
+                Add Comment
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="flex-1">
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Task
+            </Button>
+            <Button variant="destructive" size="sm">
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">Delete task</span>
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
