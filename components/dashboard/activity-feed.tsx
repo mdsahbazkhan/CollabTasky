@@ -48,7 +48,7 @@ const activities = [
   },
   {
     id: 6,
-    user: { name: "John Doe", avatar: "/avatars/01.png", initials: "JD" },
+    user: { name: "Sahbaz ", avatar: "/avatars/01.png", initials: "JD" },
     action: "uploaded file to",
     target: "Website Redesign",
     time: "5 hours ago",

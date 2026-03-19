@@ -24,7 +24,7 @@ interface UserContextType {
 
 const defaultAdmin: User = {
   id: "1",
-  name: "John Doe",
+  name: "Sahbaz",
   email: "john@nexus.dev",
   role: "admin",
   initials: "JD",

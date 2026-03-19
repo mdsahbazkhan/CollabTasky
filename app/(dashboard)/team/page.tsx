@@ -22,7 +22,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 const teamMembers = [
   {
     id: "1",
-    name: "John Doe",
+    name: "Sahbaz",
     email: "john@nexus.dev",
     role: "Admin",
     department: "Engineering",

@@ -102,7 +102,12 @@ export function ProjectOverview({ projects }: { projects: any[] }) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>View details</DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      {" "}
+                      <Link href={`/projects/${project._id}`}>
+                        View details
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem>Edit project</DropdownMenuItem>
                     <DropdownMenuItem>Archive</DropdownMenuItem>
                   </DropdownMenuContent>
@@ -111,28 +116,31 @@ export function ProjectOverview({ projects }: { projects: any[] }) {
 
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex -space-x-2">
-                    {/* {project.members.slice(0, 3).map((member, idx) => (
-                    <Avatar
-                      key={idx}
-                      className="h-7 w-7 border-2 border-background"
-                    >
-                      <AvatarImage src={member.avatar} alt={member.name} />
-                      <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                        {member.initials}
-                      </AvatarFallback>
-                    </Avatar>
-                  ))}
-                   */}
-                    {project.members.slice(0, 3).map((_: any, idx: any) => (
-                      <Avatar key={idx}>
-                        <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                          U{idx + 1}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
+                  <div className="hidden sm:flex -space-x-2">
+                    {project.members
+                      .slice(0, 3)
+                      .map((member: any, idx: number) => {
+                        const initials =
+                          typeof member === "object" && member.name
+                            ? member.name
+                                .split(" ")
+                                .map((n: string) => n[0])
+                                .join("")
+                                .toUpperCase()
+                            : member.initials || "?";
+                        return (
+                          <Avatar
+                            key={idx}
+                            className="h-8 w-8 border-2 border-background"
+                          >
+                            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                              {initials}
+                            </AvatarFallback>
+                          </Avatar>
+                        );
+                      })}
                     {project.members.length > 3 && (
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-muted text-xs font-medium">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-xs font-medium">
                         +{project.members.length - 3}
                       </div>
                     )}

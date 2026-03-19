@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/src/lib/utils";
+import { createProject } from "@/src/services/project.service";
+import { toast } from "sonner";
 
 const colors = [
   { name: "Blue", value: "bg-blue-500" },
@@ -42,14 +44,44 @@ export function CreateProjectModal({
 }: CreateProjectModalProps) {
   const [selectedColor, setSelectedColor] = React.useState(colors[0].value);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [formData, setFormData] = React.useState({
+    name: "",
+    description: "",
+    status: "active",
+    dueDate: "",
+    color: colors[0].value,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    onOpenChange(false);
+
+    if (!formData.name.trim()) return;
+    try {
+      setIsLoading(true);
+      const res = await createProject({
+        name: formData.name,
+        description: formData.description,
+        status: formData.status,
+        startDate: formData.dueDate,
+        endDate: formData.dueDate,
+        color: formData.color,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.success("Project created successfully!");
+      setFormData({
+        name: "",
+        description: "",
+        status: "active",
+        dueDate: "",
+        color: colors[0].value,
+      });
+      onOpenChange(false);
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to create project");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -65,7 +97,15 @@ export function CreateProjectModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Project Name</Label>
-            <Input id="name" placeholder="Enter project name" required />
+            <Input
+              id="name"
+              placeholder="Enter project name"
+              required
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+            />
           </div>
 
           <div className="space-y-2">
@@ -74,34 +114,30 @@ export function CreateProjectModal({
               id="description"
               placeholder="Describe your project..."
               rows={3}
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select defaultValue="medium">
-                <SelectTrigger id="priority">
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select defaultValue="planning">
+              <Select
+                defaultValue="active"
+                value={formData.status}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, status: value })
+                }
+              >
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="planning">Planning</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="on-hold">On Hold</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -109,7 +145,14 @@ export function CreateProjectModal({
 
           <div className="space-y-2">
             <Label htmlFor="dueDate">Due Date</Label>
-            <Input id="dueDate" type="date" />
+            <Input
+              id="dueDate"
+              type="date"
+              value={formData.dueDate}
+              onChange={(e) =>
+                setFormData({ ...formData, dueDate: e.target.value })
+              }
+            />
           </div>
 
           <div className="space-y-2">
@@ -119,7 +162,10 @@ export function CreateProjectModal({
                 <button
                   key={color.value}
                   type="button"
-                  onClick={() => setSelectedColor(color.value)}
+                  onClick={() => {
+                    setSelectedColor(color.value);
+                    setFormData({ ...formData, color: color.value });
+                  }}
                   className={cn(
                     "h-8 w-8 rounded-full transition-all",
                     color.value,

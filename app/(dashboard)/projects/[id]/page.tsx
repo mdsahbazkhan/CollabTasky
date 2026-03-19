@@ -1,14 +1,15 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import * as React from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft,
   Calendar,
@@ -18,59 +19,159 @@ import {
   MoreHorizontal,
   Plus,
   Users,
-} from "lucide-react"
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import { getProjectById } from "@/src/services/project.service";
+import { getTasksByProject } from "@/src/services/task.service";
 
-const project = {
-  id: "1",
-  name: "Website Redesign",
-  description:
-    "Complete overhaul of the company website with modern design, improved UX, and better performance. This project includes redesigning all pages, implementing new features, and migrating to a new tech stack.",
-  status: "In Progress",
-  progress: 65,
-  priority: "High",
-  members: [
-    { name: "John Doe", initials: "JD", role: "Project Lead" },
-    { name: "Sarah Chen", initials: "SC", role: "Designer" },
-    { name: "Mike Johnson", initials: "MJ", role: "Developer" },
-    { name: "Emily Davis", initials: "ED", role: "Developer" },
-  ],
-  tasksCompleted: 24,
-  totalTasks: 36,
-  startDate: "Jan 15, 2026",
-  dueDate: "Mar 15, 2026",
-  color: "bg-blue-500",
-}
+const project = null;
 
-const tasks = [
-  { id: "1", title: "Design homepage mockup", status: "Done", assignee: "SC" },
-  { id: "2", title: "Implement navigation", status: "Done", assignee: "MJ" },
-  { id: "3", title: "Create component library", status: "In Progress", assignee: "ED" },
-  { id: "4", title: "Setup CI/CD pipeline", status: "In Progress", assignee: "MJ" },
-  { id: "5", title: "Design mobile layouts", status: "Todo", assignee: "SC" },
-  { id: "6", title: "API integration", status: "Todo", assignee: "ED" },
-]
+const tasks: any[] = [];
 
 function getStatusColor(status: string) {
   switch (status) {
     case "Done":
-      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
     case "In Progress":
-      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
     case "Todo":
-      return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+      return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
     default:
-      return "bg-secondary text-secondary-foreground"
+      return "bg-secondary text-secondary-foreground";
   }
 }
 
 export default function ProjectDetailsPage() {
+  const params = useParams();
+  const projectId = params.id as string;
+  const [project, setProject] = React.useState<any>(null);
+  const [tasks, setTasks] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [progress, setProgress] = React.useState(0);
+  const [tasksCompleted, setTasksCompleted] = React.useState(0);
+  const [totalTasks, setTotalTasks] = React.useState(0);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const projectData = await getProjectById(projectId);
+        setProject(projectData);
+
+        const tasksData = await getTasksByProject(projectId);
+        setTasks(tasksData);
+
+        const total = tasksData.length;
+        const completed = tasksData.filter(
+          (task: any) => task.status === "completed",
+        ).length;
+        const calculatedProgress =
+          total === 0 ? 0 : Math.round((completed / total) * 100);
+
+        setProgress(calculatedProgress);
+        setTasksCompleted(completed);
+        setTotalTasks(total);
+      } catch (error) {
+        console.error("Failed to fetch project:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (projectId) {
+      fetchData();
+    }
+  }, [projectId]);
+
+  if (loading) {
+    return (
+      <DashboardLayout title="Project Details">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading project...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!project) {
+    return (
+      <DashboardLayout title="Project Details">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Project not found</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Process owner (same logic as members)
+  const processedOwner = (() => {
+    const o = project.owner;
+    if (typeof o === "object" && o.name) {
+      return {
+        name: o.name,
+        initials: o.name
+          .split(" ")
+          .map((n: string) => n[0])
+          .join("")
+          .toUpperCase(),
+        role: "Owner",
+      };
+    }
+    return {
+      name: "Owner",
+      initials: "?",
+      role: "Owner",
+    };
+  })();
+
+  // Process members to handle both populated and non-populated
+  const processedMembers = (project.members || []).map((m: any) => {
+    if (typeof m === "object" && m.name) {
+      return {
+        name: m.name,
+        initials: m.name
+          .split(" ")
+          .map((n: string) => n[0])
+          .join("")
+          .toUpperCase(),
+        role: m.role || "Member",
+      };
+    }
+    return {
+      name: "Member",
+      initials: "?",
+      role: "Member",
+    };
+  });
+
+  // Map task status for display
+  const getTaskStatus = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "Done";
+      case "in-progress":
+        return "In Progress";
+      default:
+        return "Todo";
+    }
+  };
+
+  const getAssigneeInitials = (assignedTo: any) => {
+    if (assignedTo && typeof assignedTo === "object" && assignedTo.name) {
+      return assignedTo.name
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase();
+    }
+    return "?";
+  };
   return (
     <DashboardLayout title="Project Details">
       <div className="space-y-6">
@@ -85,7 +186,9 @@ export default function ProjectDetailsPage() {
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <div className={`h-3 w-3 rounded-full ${project.color}`} />
-              <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
+              <h1 className="text-2xl font-bold text-foreground">
+                {project.name}
+              </h1>
               <Badge
                 variant="secondary"
                 className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
@@ -109,7 +212,9 @@ export default function ProjectDetailsPage() {
                 <DropdownMenuItem>Duplicate project</DropdownMenuItem>
                 <DropdownMenuItem>Export data</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive">Archive project</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive">
+                  Archive project
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -124,7 +229,7 @@ export default function ProjectDetailsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">
-                  {project.tasksCompleted}/{project.totalTasks}
+                  {tasksCompleted}/{totalTasks}
                 </p>
                 <p className="text-sm text-muted-foreground">Tasks Completed</p>
               </div>
@@ -137,7 +242,7 @@ export default function ProjectDetailsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">
-                  {project.members.length}
+                  {processedMembers.length}
                 </p>
                 <p className="text-sm text-muted-foreground">Team Members</p>
               </div>
@@ -149,7 +254,9 @@ export default function ProjectDetailsPage() {
                 <Clock className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{project.progress}%</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {progress}%
+                </p>
                 <p className="text-sm text-muted-foreground">Progress</p>
               </div>
             </CardContent>
@@ -160,21 +267,47 @@ export default function ProjectDetailsPage() {
                 <Calendar className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-lg font-bold text-foreground">{project.dueDate}</p>
+                <p className="text-lg font-bold text-foreground">
+                  {project.endDate
+                    ? new Date(project.endDate).toLocaleDateString()
+                    : "Not set"}
+                </p>
                 <p className="text-sm text-muted-foreground">Due Date</p>
               </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* Team Members Row */}
+        <div className="flex items-center justify-between">
+          <div className="flex -space-x-2">
+            <Avatar className="h-7 w-7 border-2 border-background">
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                {processedOwner.initials}
+              </AvatarFallback>
+            </Avatar>
+            <span className="ml-3 text-sm text-muted-foreground">
+              Owned by {processedOwner.name}
+            </span>
+
+            {processedMembers.length > 4 && (
+              <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-muted text-xs font-medium">
+                +{processedMembers.length - 4}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Progress */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-foreground">Overall Progress</span>
-              <span className="text-sm text-muted-foreground">{project.progress}%</span>
+              <span className="text-sm font-medium text-foreground">
+                Overall Progress
+              </span>
+              <span className="text-sm text-muted-foreground">{progress}%</span>
             </div>
-            <Progress value={project.progress} className="h-3" />
+            <Progress value={progress} className="h-3" />
           </CardContent>
         </Card>
 
@@ -188,25 +321,35 @@ export default function ProjectDetailsPage() {
 
           <TabsContent value="tasks" className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Project Tasks</h3>
+              <h3 className="text-lg font-semibold text-foreground">
+                Project Tasks
+              </h3>
               <Button size="sm">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Task
               </Button>
             </div>
             <div className="space-y-2">
-              {tasks.map((task) => (
-                <Card key={task.id} className="transition-colors hover:bg-muted/50">
+              {tasks.map((task: any) => (
+                <Card
+                  key={task._id}
+                  className="transition-colors hover:bg-muted/50"
+                >
                   <CardContent className="flex items-center gap-4 p-4">
                     <div className="flex-1">
-                      <p className="font-medium text-foreground">{task.title}</p>
+                      <p className="font-medium text-foreground">
+                        {task.title}
+                      </p>
                     </div>
-                    <Badge variant="secondary" className={getStatusColor(task.status)}>
-                      {task.status}
+                    <Badge
+                      variant="secondary"
+                      className={getStatusColor(getTaskStatus(task.status))}
+                    >
+                      {getTaskStatus(task.status)}
                     </Badge>
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                        {task.assignee}
+                        {getAssigneeInitials(task.assignedTo)}
                       </AvatarFallback>
                     </Avatar>
                   </CardContent>
@@ -217,14 +360,16 @@ export default function ProjectDetailsPage() {
 
           <TabsContent value="team" className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Team Members</h3>
+              <h3 className="text-lg font-semibold text-foreground">
+                Team Members
+              </h3>
               <Button size="sm">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Member
               </Button>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {project.members.map((member, idx) => (
+              {processedMembers.map((member: any, idx: number) => (
                 <Card key={idx}>
                   <CardContent className="flex flex-col items-center p-6 text-center">
                     <Avatar className="h-16 w-16 mb-4">
@@ -232,8 +377,12 @@ export default function ProjectDetailsPage() {
                         {member.initials}
                       </AvatarFallback>
                     </Avatar>
-                    <p className="font-semibold text-foreground">{member.name}</p>
-                    <p className="text-sm text-muted-foreground">{member.role}</p>
+                    <p className="font-semibold text-foreground">
+                      {member.name}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {member.role}
+                    </p>
                   </CardContent>
                 </Card>
               ))}
@@ -256,12 +405,20 @@ export default function ProjectDetailsPage() {
               <CardContent className="flex items-center gap-8">
                 <div>
                   <p className="text-sm text-muted-foreground">Start Date</p>
-                  <p className="font-medium text-foreground">{project.startDate}</p>
+                  <p className="font-medium text-foreground">
+                    {project.startDate
+                      ? new Date(project.startDate).toLocaleDateString()
+                      : "Not set"}
+                  </p>
                 </div>
                 <div className="flex-1 border-t-2 border-dashed border-border" />
                 <div>
                   <p className="text-sm text-muted-foreground">Due Date</p>
-                  <p className="font-medium text-foreground">{project.dueDate}</p>
+                  <p className="font-medium text-foreground">
+                    {project.endDate
+                      ? new Date(project.endDate).toLocaleDateString()
+                      : "Not set"}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -269,5 +426,5 @@ export default function ProjectDetailsPage() {
         </Tabs>
       </div>
     </DashboardLayout>
-  )
+  );
 }

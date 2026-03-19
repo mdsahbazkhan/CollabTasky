@@ -18,16 +18,15 @@ import { cn } from "@/src/lib/utils";
 
 interface ProjectCardProps {
   project: {
-    id: string;
+    _id: string;
     name: string;
     description: string;
     status: string;
     progress: number;
-    priority: string;
     members: { name: string; initials: string }[];
     tasksCompleted: number;
     totalTasks: number;
-    dueDate: string;
+    endDate: string;
     color: string;
   };
   viewMode: "grid" | "list";
@@ -36,13 +35,11 @@ interface ProjectCardProps {
 
 function getStatusColor(status: string) {
   switch (status) {
-    case "In Progress":
+    case "active":
       return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-    case "Planning":
-      return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
-    case "On Hold":
+    case "archived":
       return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
-    case "Completed":
+    case "completed":
       return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
     default:
       return "bg-secondary text-secondary-foreground";
@@ -63,7 +60,7 @@ export function ProjectCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <Link
-                href={`/projects/${project.id}`}
+                href={`/projects/${project._id}`}
                 className="font-semibold text-foreground hover:text-primary truncate"
               >
                 {project.name}
@@ -81,9 +78,12 @@ export function ProjectCard({
           </div>
 
           <div className="hidden md:flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <span className="text-sm font-medium text-foreground">
+              {project.tasksCompleted}
+            </span>
             <span className="text-sm text-muted-foreground">
-              {project.tasksCompleted}/{project.totalTasks}
+              / {project.totalTasks}
             </span>
           </div>
 
@@ -104,7 +104,7 @@ export function ProjectCard({
 
           <div className="hidden lg:flex items-center gap-1 text-sm text-muted-foreground">
             <Calendar className="h-4 w-4" />
-            <span>{project.dueDate}</span>
+            <span>{new Date(project.endDate).toLocaleDateString()}</span>
           </div>
 
           <div className="hidden xl:block w-32">
@@ -144,7 +144,7 @@ export function ProjectCard({
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <Link
-              href={`/projects/${project.id}`}
+              href={`/projects/${project._id}`}
               className="font-semibold text-foreground hover:text-primary line-clamp-1"
             >
               {project.name}
@@ -196,14 +196,15 @@ export function ProjectCard({
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <CheckCircle2 className="h-4 w-4" />
-            <span>
-              {project.tasksCompleted}/{project.totalTasks} tasks
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <span className="font-medium text-foreground">
+              {project.tasksCompleted}
             </span>
+            <span>of {project.totalTasks} tasks completed</span>
           </div>
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Calendar className="h-4 w-4" />
-            <span>{project.dueDate}</span>
+            <span>{new Date(project.endDate).toLocaleDateString()}</span>
           </div>
         </div>
 
@@ -223,7 +224,7 @@ export function ProjectCard({
             )}
           </div>
           <Button variant="ghost" size="sm" asChild>
-            <Link href={`/projects/${project.id}`}>View</Link>
+            <Link href={`/projects/${project._id}`}>View</Link>
           </Button>
         </div>
       </CardContent>
