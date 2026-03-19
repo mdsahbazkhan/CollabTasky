@@ -103,7 +103,6 @@ export function ProjectOverview({ projects }: { projects: any[] }) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
-                      {" "}
                       <Link href={`/projects/${project._id}`}>
                         View details
                       </Link>
