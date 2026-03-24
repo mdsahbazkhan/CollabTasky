@@ -30,6 +30,8 @@ import {
 import { CreateTaskModal } from "@/components/tasks/create-task-modal";
 import { getProjectById } from "@/src/services/project.service";
 import { getTasksByProject } from "@/src/services/task.service";
+import AddMemberModal from "@/components/projects/AddMemberModal";
+import { getAllUsers } from "@/src/services/auth.service";
 
 const project = null;
 
@@ -58,15 +60,25 @@ export default function ProjectDetailsPage() {
   const [progress, setProgress] = React.useState(0);
   const [tasksCompleted, setTasksCompleted] = React.useState(0);
   const [totalTasks, setTotalTasks] = React.useState(0);
+  const [openMemberModal, setOpenMemberModal] = React.useState(false);
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] =
     React.useState(false);
-
+  const [users, setUsers] = React.useState([]);
+  const fetchProject = async () => {
+    try {
+      const projectData = await getProjectById(projectId);
+      setProject(projectData);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   React.useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const projectData = await getProjectById(projectId);
-        setProject(projectData);
+        if (projectId) {
+          fetchProject();
+        }
 
         const tasksData = await getTasksByProject(projectId);
         setTasks(tasksData);
@@ -92,6 +104,14 @@ export default function ProjectDetailsPage() {
       fetchData();
     }
   }, [projectId]);
+  const fetchUsers = async () => {
+    const res = await getAllUsers();
+    setUsers(res);
+  };
+
+  React.useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleTaskCreated = async () => {
     try {
@@ -176,10 +196,18 @@ export default function ProjectDetailsPage() {
     };
   });
 
+  // Get owner ID for filtering
+  const ownerId = project.owner._id || project.owner;
+
+  // Filter out owner from members to avoid duplicates
+  const uniqueMembers = processedMembers.filter(
+    (m: any) => m._id?.toString() !== ownerId?.toString(),
+  );
+
   // Include owner in team members for assignment
   const teamMembers = [
     {
-      _id: project.owner._id || project.owner,
+      _id: ownerId,
       name: project.owner.name || "Owner",
       initials: project.owner.name
         ? project.owner.name
@@ -189,14 +217,16 @@ export default function ProjectDetailsPage() {
             .toUpperCase()
         : "?",
     },
-    ...processedMembers,
+    ...uniqueMembers,
   ];
 
   // Map task status for display
   const getTaskStatus = (status: string) => {
     switch (status) {
       case "completed":
-        return "Done";
+        return "Completed";
+      case "review":
+        return "Review";
       case "in-progress":
         return "In Progress";
       default:
@@ -405,7 +435,7 @@ export default function ProjectDetailsPage() {
               <h3 className="text-lg font-semibold text-foreground">
                 Team Members
               </h3>
-              <Button size="sm">
+              <Button size="sm" onClick={() => setOpenMemberModal(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Member
               </Button>
@@ -473,6 +503,13 @@ export default function ProjectDetailsPage() {
           projectId={projectId}
           teamMembers={teamMembers}
           onSuccess={handleTaskCreated}
+        />
+        <AddMemberModal
+          open={openMemberModal}
+          onOpenChange={setOpenMemberModal}
+          projectId={projectId}
+          users={users}
+          refreshProject={fetchProject}
         />
       </div>
     </DashboardLayout>

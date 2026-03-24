@@ -19,3 +19,7 @@ export const updateProject = async (projectId: string, projectData: any) => {
   const res = await API.put(`/projects/${projectId}`, projectData);
   return res.data.project;
 };
+export const addMember = async (projectId: string, userId: string) => {
+  const res = await API.post(`/projects/${projectId}/members`, { userId });
+  return res.data;
+};
