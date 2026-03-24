@@ -69,7 +69,7 @@ export function ProjectCard({
                 variant="secondary"
                 className={getStatusColor(project.status)}
               >
-                {project.status}
+                {project.status?.toUpperCase()}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground line-clamp-1">

@@ -38,13 +38,13 @@ const project = null;
 const tasks: any[] = [];
 function getStatusColor(status: string) {
   switch (status) {
-    case "completed":
+    case "Completed":
       return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-    case "review":
+    case "Review":
       return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
     case "inProgress":
       return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-    case "todo":
+    case "Todo":
       return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
     default:
       return "bg-secondary text-secondary-foreground";
@@ -227,12 +227,24 @@ export default function ProjectDetailsPage() {
         return "Completed";
       case "review":
         return "Review";
-      case "in-progress":
+      case "inProgress":
         return "In Progress";
       default:
         return "Todo";
     }
   };
+  function getStatusColor(status: string) {
+  switch (status) {
+    case "active":
+      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+    case "archived":
+      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+    case "completed":
+      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+    default:
+      return "bg-secondary text-secondary-foreground";
+  }
+}
 
   const getAssigneeInitials = (assignedTo: any) => {
     if (assignedTo && typeof assignedTo === "object" && assignedTo.name) {
@@ -263,9 +275,9 @@ export default function ProjectDetailsPage() {
               </h1>
               <Badge
                 variant="secondary"
-                className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                className={getStatusColor(project.status)}
               >
-                {project.status}
+                {project.status?.toUpperCase()}
               </Badge>
             </div>
           </div>

@@ -18,17 +18,17 @@ interface KanbanBoardProps {
 const columns: { id: Task["status"]; title: string; color: string }[] = [
   { id: "todo", title: "To Do", color: "bg-slate-500" },
   { id: "inProgress", title: "In Progress", color: "bg-blue-500" },
-  {id: "review", title: "Review", color: "bg-purple-500"},
+  { id: "review", title: "Review", color: "bg-purple-500" },
   { id: "completed", title: "Completed", color: "bg-green-500" },
 ];
 
 function getPriorityColor(priority: string) {
   switch (priority) {
-    case "High":
-      return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400";
-    case "Medium":
+    case "high":
+      return "bg-red-300 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400";
+    case "medium":
       return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
-    case "Low":
+    case "low":
       return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
     default:
       return "bg-secondary text-secondary-foreground";
@@ -127,7 +127,7 @@ export function KanbanBoard({
                                   getPriorityColor(task.priority),
                                 )}
                               >
-                                {task.priority}
+                                {task.priority?.toUpperCase()}
                               </Badge>
                               {task.tags.slice(0, 2).map((tag) => (
                                 <Badge
@@ -142,7 +142,9 @@ export function KanbanBoard({
                             <div className="flex items-center justify-between pt-2">
                               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <Calendar className="h-3 w-3" />
-                                <span>{task.dueDate}</span>
+                                <span>
+                                  {new Date(task.dueDate).toLocaleDateString()}
+                                </span>
                               </div>
                               <Avatar className="h-6 w-6">
                                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">

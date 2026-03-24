@@ -19,3 +19,12 @@ export const createTask = async (taskData: CreateTaskData) => {
   const res = await API.post("/tasks/create", taskData);
   return res.data.task;
 };
+export const getAllTask = async () => {
+  const res = await API.get("/tasks/all");
+  return res.data.tasks;
+};
+
+export const updateStatus = async (taskId: string, status: string) => {
+  const res = await API.patch(`/tasks/${taskId}/status`, { status });
+  return res.data.task;
+};
