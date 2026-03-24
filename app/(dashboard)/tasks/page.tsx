@@ -21,8 +21,8 @@ export interface Task {
   id: string
   title: string
   description: string
-  status: "todo" | "in-progress" | "done"
-  priority: "Low" | "Medium" | "High" | "Urgent"
+  status: "todo"| "inProgress"| "review"| "completed"
+  priority: "Low" | "Medium" | "High" 
   project: string
   assignee: { name: string; initials: string }
   dueDate: string
@@ -46,7 +46,7 @@ const initialTasks: Task[] = [
     title: "Implement user authentication",
     description: "Set up authentication system with email/password and OAuth providers.",
     status: "todo",
-    priority: "Urgent",
+    priority: "High",
     project: "Mobile App",
     assignee: { name: "Mike Johnson", initials: "MJ" },
     dueDate: "Mar 12",
@@ -67,7 +67,7 @@ const initialTasks: Task[] = [
     id: "4",
     title: "Setup CI/CD pipeline",
     description: "Configure GitHub Actions for automated testing and deployment.",
-    status: "in-progress",
+    status: "inProgress",
     priority: "High",
     project: "API Integration",
     assignee: { name: "David Kim", initials: "DK" },
@@ -78,7 +78,7 @@ const initialTasks: Task[] = [
     id: "5",
     title: "Create component library",
     description: "Build reusable UI components with Storybook documentation.",
-    status: "in-progress",
+    status: "inProgress",
     priority: "High",
     project: "Website Redesign",
     assignee: { name: "Sarah Chen", initials: "SC" },
@@ -89,7 +89,7 @@ const initialTasks: Task[] = [
     id: "6",
     title: "Database optimization",
     description: "Optimize database queries and add proper indexing.",
-    status: "in-progress",
+    status: "inProgress",
     priority: "Medium",
     project: "Mobile App",
     assignee: { name: "Mike Johnson", initials: "MJ" },
@@ -100,7 +100,7 @@ const initialTasks: Task[] = [
     id: "7",
     title: "User onboarding flow",
     description: "Design and implement the user onboarding experience.",
-    status: "done",
+    status: "completed",
     priority: "High",
     project: "Website Redesign",
     assignee: { name: "Emily Davis", initials: "ED" },
@@ -111,8 +111,8 @@ const initialTasks: Task[] = [
     id: "8",
     title: "Payment integration",
     description: "Integrate Stripe for subscription payments.",
-    status: "done",
-    priority: "Urgent",
+    status: "completed",
+    priority: "High",
     project: "API Integration",
     assignee: { name: "David Kim", initials: "DK" },
     dueDate: "Mar 3",
@@ -122,7 +122,7 @@ const initialTasks: Task[] = [
     id: "9",
     title: "Mobile responsive design",
     description: "Ensure all pages are fully responsive on mobile devices.",
-    status: "done",
+    status: "completed",
     priority: "Medium",
     project: "Website Redesign",
     assignee: { name: "Sarah Chen", initials: "SC" },
@@ -178,7 +178,6 @@ export default function TasksPage() {
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel>Priority</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem checked>Urgent</DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked>High</DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked>Medium</DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked>Low</DropdownMenuCheckboxItem>

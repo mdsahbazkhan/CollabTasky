@@ -4,3 +4,18 @@ export const getTasksByProject = async (projectId: string) => {
   const res = await API.get(`/tasks/project/${projectId}`);
   return res.data.tasks;
 };
+
+export interface CreateTaskData {
+  title: string;
+  description?: string;
+  project: string;
+  assignedTo?: string;
+  priority?: string;
+  dueDate?: string;
+  tags?: string[];
+}
+
+export const createTask = async (taskData: CreateTaskData) => {
+  const res = await API.post("/tasks/create", taskData);
+  return res.data.task;
+};

@@ -17,14 +17,13 @@ interface KanbanBoardProps {
 
 const columns: { id: Task["status"]; title: string; color: string }[] = [
   { id: "todo", title: "To Do", color: "bg-slate-500" },
-  { id: "in-progress", title: "In Progress", color: "bg-blue-500" },
-  { id: "done", title: "Done", color: "bg-green-500" },
+  { id: "inProgress", title: "In Progress", color: "bg-blue-500" },
+  {id: "review", title: "Review", color: "bg-purple-500"},
+  { id: "completed", title: "Completed", color: "bg-green-500" },
 ];
 
 function getPriorityColor(priority: string) {
   switch (priority) {
-    case "Urgent":
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
     case "High":
       return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400";
     case "Medium":

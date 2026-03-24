@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,44 +8,98 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
+import { createTask } from "@/src/services/task.service";
 
-interface CreateTaskModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+interface TeamMember {
+  _id: string;
+  name: string;
+  initials?: string;
 }
 
-export function CreateTaskModal({ open, onOpenChange }: CreateTaskModalProps) {
-  const [isLoading, setIsLoading] = React.useState(false)
+interface CreateTaskModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  projectId?: string;
+  teamMembers?: TeamMember[];
+  onSuccess?: () => void;
+}
+
+export function CreateTaskModal({
+  open,
+  onOpenChange,
+  projectId,
+  teamMembers,
+  onSuccess,
+}: CreateTaskModalProps) {
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [title, setTitle] = React.useState("");
+  const [description, setDescription] = React.useState("");
+  const [priority, setPriority] = React.useState("medium");
+  const [assignee, setAssignee] = React.useState("");
+  const [dueDate, setDueDate] = React.useState("");
+  const [tags, setTags] = React.useState("");
+
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setPriority("medium");
+    setAssignee("");
+    setDueDate("");
+    setTags("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsLoading(false)
-    onOpenChange(false)
-  }
+    e.preventDefault();
+    if (!title.trim() || !projectId) return;
+
+    setIsLoading(true);
+    try {
+      const taskData = {
+        title: title.trim(),
+        description: description.trim(),
+        project: projectId,
+        assignedTo: assignee || undefined,
+        priority,
+        dueDate: dueDate || undefined,
+        tags: tags
+          ? tags
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : undefined,
+      };
+
+      await createTask(taskData);
+      resetForm();
+      onOpenChange(false);
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error("Failed to create task:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Create New Task</DialogTitle>
-          <DialogDescription>
-            Add a new task to your project board.
-          </DialogDescription>
+          <DialogDescription>Add a new task to this project.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -53,6 +107,8 @@ export function CreateTaskModal({ open, onOpenChange }: CreateTaskModalProps) {
             <Input
               id="title"
               placeholder="Enter task title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               required
             />
           </div>
@@ -63,13 +119,15 @@ export function CreateTaskModal({ open, onOpenChange }: CreateTaskModalProps) {
               id="description"
               placeholder="Describe the task..."
               rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="priority">Priority</Label>
-              <Select defaultValue="medium">
+              <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger id="priority">
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
@@ -77,61 +135,50 @@ export function CreateTaskModal({ open, onOpenChange }: CreateTaskModalProps) {
                   <SelectItem value="low">Low</SelectItem>
                   <SelectItem value="medium">Medium</SelectItem>
                   <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select defaultValue="todo">
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="done">Done</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="project">Project</Label>
-              <Select defaultValue="website">
-                <SelectTrigger id="project">
-                  <SelectValue placeholder="Select project" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="website">Website Redesign</SelectItem>
-                  <SelectItem value="mobile">Mobile App</SelectItem>
-                  <SelectItem value="api">API Integration</SelectItem>
-                  <SelectItem value="docs">Documentation</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="assignee">Assignee</Label>
-              <Select>
-                <SelectTrigger id="assignee">
-                  <SelectValue placeholder="Select assignee" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="john">John Doe</SelectItem>
-                  <SelectItem value="sarah">Sarah Chen</SelectItem>
-                  <SelectItem value="mike">Mike Johnson</SelectItem>
-                  <SelectItem value="emily">Emily Davis</SelectItem>
-                </SelectContent>
-              </Select>
+              {teamMembers && teamMembers.length > 0 ? (
+                <Select
+                  value={assignee || "unassigned"}
+                  onValueChange={(val) =>
+                    setAssignee(val === "unassigned" ? "" : val)
+                  }
+                >
+                  <SelectTrigger id="assignee">
+                    <SelectValue placeholder="Select assignee" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    {teamMembers.map((member) => (
+                      <SelectItem key={member._id} value={member._id}>
+                        {member.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id="assignee"
+                  placeholder="Assignee ID (optional)"
+                  value={assignee}
+                  onChange={(e) => setAssignee(e.target.value)}
+                />
+              )}
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="dueDate">Due Date</Label>
-            <Input id="dueDate" type="date" />
+            <Input
+              id="dueDate"
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">
@@ -139,6 +186,8 @@ export function CreateTaskModal({ open, onOpenChange }: CreateTaskModalProps) {
             <Input
               id="tags"
               placeholder="design, frontend, urgent"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
             />
           </div>
 
@@ -157,5 +206,5 @@ export function CreateTaskModal({ open, onOpenChange }: CreateTaskModalProps) {
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

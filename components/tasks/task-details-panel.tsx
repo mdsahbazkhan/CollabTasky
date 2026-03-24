@@ -41,8 +41,6 @@ interface TaskDetailsPanelProps {
 
 function getPriorityColor(priority: string) {
   switch (priority) {
-    case "Urgent":
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
     case "High":
       return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400";
     case "Medium":
@@ -58,9 +56,11 @@ function getStatusColor(status: string) {
   switch (status) {
     case "todo":
       return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
-    case "in-progress":
+    case "inProgress":
       return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-    case "done":
+    case "review":
+      return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
+    case "Completed":
       return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
     default:
       return "bg-secondary text-secondary-foreground";
@@ -69,8 +69,9 @@ function getStatusColor(status: string) {
 
 const statusLabels: Record<string, string> = {
   todo: "To Do",
-  "in-progress": "In Progress",
-  done: "Done",
+  inProgress: "In Progress",
+  review: "Review",
+  Completed: "Completed",
 };
 
 const comments = [

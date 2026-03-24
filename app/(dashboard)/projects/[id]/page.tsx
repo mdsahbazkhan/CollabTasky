@@ -27,20 +27,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CreateTaskModal } from "@/components/tasks/create-task-modal";
 import { getProjectById } from "@/src/services/project.service";
 import { getTasksByProject } from "@/src/services/task.service";
 
 const project = null;
 
 const tasks: any[] = [];
-
 function getStatusColor(status: string) {
   switch (status) {
-    case "Done":
+    case "completed":
       return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-    case "In Progress":
+    case "review":
+      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+    case "inProgress":
       return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-    case "Todo":
+    case "todo":
       return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
     default:
       return "bg-secondary text-secondary-foreground";
@@ -56,6 +58,8 @@ export default function ProjectDetailsPage() {
   const [progress, setProgress] = React.useState(0);
   const [tasksCompleted, setTasksCompleted] = React.useState(0);
   const [totalTasks, setTotalTasks] = React.useState(0);
+  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] =
+    React.useState(false);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -88,6 +92,26 @@ export default function ProjectDetailsPage() {
       fetchData();
     }
   }, [projectId]);
+
+  const handleTaskCreated = async () => {
+    try {
+      const tasksData = await getTasksByProject(projectId);
+      setTasks(tasksData);
+
+      const total = tasksData.length;
+      const completed = tasksData.filter(
+        (task: any) => task.status === "completed",
+      ).length;
+      const calculatedProgress =
+        total === 0 ? 0 : Math.round((completed / total) * 100);
+
+      setProgress(calculatedProgress);
+      setTasksCompleted(completed);
+      setTotalTasks(total);
+    } catch (error) {
+      console.error("Failed to refresh tasks:", error);
+    }
+  };
 
   if (loading) {
     return (
@@ -134,6 +158,7 @@ export default function ProjectDetailsPage() {
   const processedMembers = (project.members || []).map((m: any) => {
     if (typeof m === "object" && m.name) {
       return {
+        _id: m._id,
         name: m.name,
         initials: m.name
           .split(" ")
@@ -144,11 +169,28 @@ export default function ProjectDetailsPage() {
       };
     }
     return {
+      _id: m,
       name: "Member",
       initials: "?",
       role: "Member",
     };
   });
+
+  // Include owner in team members for assignment
+  const teamMembers = [
+    {
+      _id: project.owner._id || project.owner,
+      name: project.owner.name || "Owner",
+      initials: project.owner.name
+        ? project.owner.name
+            .split(" ")
+            .map((n: string) => n[0])
+            .join("")
+            .toUpperCase()
+        : "?",
+    },
+    ...processedMembers,
+  ];
 
   // Map task status for display
   const getTaskStatus = (status: string) => {
@@ -324,7 +366,7 @@ export default function ProjectDetailsPage() {
               <h3 className="text-lg font-semibold text-foreground">
                 Project Tasks
               </h3>
-              <Button size="sm">
+              <Button size="sm" onClick={() => setIsCreateTaskModalOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Task
               </Button>
@@ -424,6 +466,14 @@ export default function ProjectDetailsPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <CreateTaskModal
+          open={isCreateTaskModalOpen}
+          onOpenChange={setIsCreateTaskModalOpen}
+          projectId={projectId}
+          teamMembers={teamMembers}
+          onSuccess={handleTaskCreated}
+        />
       </div>
     </DashboardLayout>
   );

@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getTasksByProject } from "@/src/services/task.service";
+import { EditProjectModal } from "@/components/projects/edit-project-modal";
 import { useEffect, useState } from "react";
 function getStatusColor(status: string) {
   switch (status) {
@@ -30,6 +31,8 @@ function getStatusColor(status: string) {
 
 export function ProjectOverview({ projects }: { projects: any[] }) {
   const [taskMap, setTaskMap] = useState<{ [key: string]: number }>({});
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
   useEffect(() => {
     const fetchTasks = async () => {
       const map: any = {};
@@ -107,7 +110,14 @@ export function ProjectOverview({ projects }: { projects: any[] }) {
                         View details
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>Edit project</DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setSelectedProject(project);
+                        setEditModalOpen(true);
+                      }}
+                    >
+                      Edit project
+                    </DropdownMenuItem>
                     <DropdownMenuItem>Archive</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -163,6 +173,16 @@ export function ProjectOverview({ projects }: { projects: any[] }) {
           );
         })}
       </CardContent>
+
+      <EditProjectModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        project={selectedProject}
+        onSuccess={() => {
+          // Optionally trigger a refresh here
+          window.location.reload();
+        }}
+      />
     </Card>
   );
 }
