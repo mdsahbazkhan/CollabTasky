@@ -41,11 +41,11 @@ interface TaskDetailsPanelProps {
 
 function getPriorityColor(priority: string) {
   switch (priority) {
-    case "High":
+    case "high":
       return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400";
-    case "Medium":
+    case "medium":
       return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
-    case "Low":
+    case "low":
       return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
     default:
       return "bg-secondary text-secondary-foreground";
@@ -71,7 +71,7 @@ const statusLabels: Record<string, string> = {
   todo: "To Do",
   inProgress: "In Progress",
   review: "Review",
-  Completed: "Completed",
+  completed: "Completed",
 };
 
 const comments = [
@@ -207,8 +207,9 @@ export function TaskDetailsPanel({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todo">To Do</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="done">Done</SelectItem>
+                    <SelectItem value="inProgress">In Progress</SelectItem>
+                    <SelectItem value="review">Review</SelectItem>{" "}
+                    <SelectItem value="completed">Completed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -23,7 +23,7 @@ export interface Task {
   title: string;
   description: string;
   status: "todo" | "inProgress" | "review" | "completed";
-  priority: "Low" | "Medium" | "High";
+  priority: "low" | "medium" | "high";
   project: string;
   assignee: { name: string; initials: string };
   dueDate: string;
