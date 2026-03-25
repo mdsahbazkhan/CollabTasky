@@ -14,6 +14,16 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -26,17 +36,28 @@ import {
   Edit,
   FolderKanban,
   MessageSquare,
+  Save,
   Tag,
   Trash2,
   User,
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import type { Task } from "@/app/(dashboard)/tasks/page";
+import { updateTask, deleteTask } from "@/src/services/task.service";
+import { toast } from "sonner";
 
 interface TaskDetailsPanelProps {
   task: Task | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUpdate?: (taskId: string, updates: any) => Promise<void>;
+  onDelete?: (taskId: string) => Promise<void>;
+  projects?: {
+    _id: string;
+    name: string;
+    members?: { _id: string; name: string }[];
+  }[];
+  onSuccess?: () => Promise<void>;
 }
 
 function getPriorityColor(priority: string) {
@@ -60,7 +81,7 @@ function getStatusColor(status: string) {
       return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
     case "review":
       return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
-    case "Completed":
+    case "completed":
       return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
     default:
       return "bg-secondary text-secondary-foreground";
@@ -95,8 +116,79 @@ export function TaskDetailsPanel({
   task,
   open,
   onOpenChange,
+  projects = [],
+  onUpdate,
+  onDelete,
+  onSuccess,
 }: TaskDetailsPanelProps) {
   const [comment, setComment] = React.useState("");
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editedTask, setEditedTask] = React.useState<any>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+
+  // Initialize editedTask when task changes
+  React.useEffect(() => {
+    if (task) {
+      setEditedTask(task);
+      setIsEditing(false);
+    }
+  }, [task]);
+
+  // Get members from the task's project
+  const projectMembers = task?.projectId
+    ? projects.find((p) => p._id === task.projectId)?.members || []
+    : [];
+
+  const handleUpdate = async () => {
+    if (!editedTask || !task) return;
+    setIsSaving(true);
+    try {
+      // Only send the fields that the API expects
+      const updateData = {
+        title: editedTask.title,
+        description: editedTask.description,
+        status: editedTask.status,
+        priority: editedTask.priority,
+        assignedTo:
+          editedTask.assignedTo === "unassigned" ? null : editedTask.assignedTo,
+        dueDate: editedTask.dueDate,
+        tags: editedTask.tags,
+      };
+      await updateTask(task.id, updateData as any);
+      setIsEditing(false);
+      await onSuccess?.();
+      toast.success("Task updated successfully");
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to update task");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!task) return;
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!task) return;
+    setIsLoading(true);
+    setShowDeleteDialog(false);
+    try {
+      await deleteTask(task.id);
+      onOpenChange(false);
+      await onSuccess?.();
+      toast.success("Task deleted successfully");
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to delete task");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!task) return null;
 
@@ -118,18 +210,35 @@ export function TaskDetailsPanel({
             <Badge variant="secondary" className={getStatusColor(task.status)}>
               {statusLabels[task.status]}
             </Badge>
-            <Badge
-              variant="secondary"
-              className={cn(getPriorityColor(task.priority))}
+            <Select
+              defaultValue={editedTask?.priority || task.priority}
+              onValueChange={(value) =>
+                setEditedTask({ ...editedTask, priority: value })
+              }
+              disabled={!isEditing}
             >
-              {task.priority}
-            </Badge>
+              <SelectTrigger className="h-8 w-32">
+                <SelectValue />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Description */}
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-foreground">Description</h4>
-            <p className="text-sm text-muted-foreground">{task.description}</p>
+            <Textarea
+              value={editedTask?.description || task.description}
+              onChange={(e) =>
+                setEditedTask({ ...editedTask, description: e.target.value })
+              }
+              disabled={!isEditing}
+            />
           </div>
 
           <Separator />
@@ -148,9 +257,26 @@ export function TaskDetailsPanel({
                       {task.assignee.initials}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm font-medium text-foreground">
-                    {task.assignee.name}
-                  </span>
+                  <Select
+                    defaultValue="unassigned"
+                    onValueChange={(value) =>
+                      setEditedTask({ ...editedTask, assignedTo: value })
+                    }
+                    disabled={!isEditing}
+                  >
+                    <SelectTrigger className="h-8 w-40">
+                      <SelectValue placeholder="Assign user" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      {projectMembers.map((m: any) => (
+                        <SelectItem key={m._id} value={m._id}>
+                          {m.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -173,9 +299,15 @@ export function TaskDetailsPanel({
               </div>
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground">Due Date</p>
-                <span className="text-sm font-medium text-foreground">
-                  {task.dueDate}
-                </span>
+                <input
+                  type="date"
+                  value={editedTask?.dueDate?.split("T")[0] || ""}
+                  onChange={(e) =>
+                    setEditedTask({ ...editedTask, dueDate: e.target.value })
+                  }
+                  disabled={!isEditing}
+                  className="text-sm bg-transparent border rounded px-2 py-1"
+                />
               </div>
             </div>
 
@@ -201,7 +333,13 @@ export function TaskDetailsPanel({
               </div>
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground">Status</p>
-                <Select defaultValue={task.status}>
+                <Select
+                  defaultValue={editedTask?.status || task.status}
+                  onValueChange={(value) =>
+                    setEditedTask({ ...editedTask, status: value })
+                  }
+                  disabled={!isEditing}
+                >
                   <SelectTrigger className="h-8 w-40">
                     <SelectValue />
                   </SelectTrigger>
@@ -265,17 +403,76 @@ export function TaskDetailsPanel({
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="flex-1">
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Task
-            </Button>
-            <Button variant="destructive" size="sm">
-              <Trash2 className="h-4 w-4" />
-              <span className="sr-only">Delete task</span>
-            </Button>
+            {isEditing ? (
+              <>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex-1"
+                  onClick={handleUpdate}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(false)}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Task
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">Delete task</span>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </SheetContent>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p className="font-medium">{task?.title}</p>
+              <p className="text-muted-foreground">{task?.description}</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 }

@@ -150,108 +150,68 @@ export default function TasksPage() {
                   Filter
                 </Button>
               </DropdownMenuTrigger>
-              {/* <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>Priority</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem
-                  checked={selectedPriorities.includes("high")}
-                  onCheckedChange={() => handlePriorityChange("high")}
-                >
-                  High
-                </DropdownMenuCheckboxItem>
 
-                <DropdownMenuCheckboxItem
-                  checked={selectedPriorities.includes("medium")}
-                  onCheckedChange={() => handlePriorityChange("medium")}
-                >
-                  Medium
-                </DropdownMenuCheckboxItem>
-
-                <DropdownMenuCheckboxItem
-                  checked={selectedPriorities.includes("low")}
-                  onCheckedChange={() => handlePriorityChange("low")}
-                >
-                  Low
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuSeparator />
-
-                <DropdownMenuLabel>Projects</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {projects.map((project: any) => (
-                  <DropdownMenuCheckboxItem
-                    key={project._id}
-                    checked={selectedProjects.includes(project._id)}
-                    onCheckedChange={() => handleProjectChange(project._id)}
-                  >
-                    {project.name}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent> */}
               <DropdownMenuContent align="end" className="w-64 p-2 space-y-2">
+                {/* Priority Section */}
+                <div className="px-2 py-1">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">
+                    Priority
+                  </p>
 
-  {/* Priority Section */}
-  <div className="px-2 py-1">
-    <p className="text-xs font-semibold text-muted-foreground mb-1">
-      Priority
-    </p>
+                  <div className="space-y-1">
+                    {["high", "medium", "low"].map((p) => (
+                      <DropdownMenuCheckboxItem
+                        key={p}
+                        checked={selectedPriorities.includes(p)}
+                        onCheckedChange={() => handlePriorityChange(p)}
+                        className="rounded-md"
+                      >
+                        <span className="capitalize">{p}</span>
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </div>
+                </div>
 
-    <div className="space-y-1">
-      {["high", "medium", "low"].map((p) => (
-        <DropdownMenuCheckboxItem
-          key={p}
-          checked={selectedPriorities.includes(p)}
-          onCheckedChange={() => handlePriorityChange(p)}
-          className="rounded-md"
-        >
-          <span className="capitalize">{p}</span>
-        </DropdownMenuCheckboxItem>
-      ))}
-    </div>
-  </div>
+                {/* Divider */}
+                <div className="h-px bg-border" />
 
-  {/* Divider */}
-  <div className="h-px bg-border" />
+                {/* Project Section */}
+                <div className="px-2 py-1 max-h-40 overflow-y-auto">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">
+                    Projects
+                  </p>
 
-  {/* Project Section */}
-  <div className="px-2 py-1 max-h-40 overflow-y-auto">
-    <p className="text-xs font-semibold text-muted-foreground mb-1">
-      Projects
-    </p>
+                  <div className="space-y-1">
+                    {projects.map((project: any) => (
+                      <DropdownMenuCheckboxItem
+                        key={project._id}
+                        checked={selectedProjects.includes(project._id)}
+                        onCheckedChange={() => handleProjectChange(project._id)}
+                        className="rounded-md"
+                      >
+                        {project.name}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </div>
+                </div>
 
-    <div className="space-y-1">
-      {projects.map((project: any) => (
-        <DropdownMenuCheckboxItem
-          key={project._id}
-          checked={selectedProjects.includes(project._id)}
-          onCheckedChange={() =>
-            handleProjectChange(project._id)
-          }
-          className="rounded-md"
-        >
-          {project.name}
-        </DropdownMenuCheckboxItem>
-      ))}
-    </div>
-  </div>
+                {/* Divider */}
+                <div className="h-px bg-border" />
 
-  {/* Divider */}
-  <div className="h-px bg-border" />
-
-  {/* Clear Filters */}
-  <div className="px-2">
-    <Button
-      variant="ghost"
-      className="w-full justify-start text-sm"
-      onClick={() => {
-        setSelectedPriorities([]);
-        setSelectedProjects([]);
-      }}
-    >
-      Clear Filters
-    </Button>
-  </div>
-
-</DropdownMenuContent>
+                {/* Clear Filters */}
+                <div className="px-2">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-sm"
+                    onClick={() => {
+                      setSelectedPriorities([]);
+                      setSelectedProjects([]);
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              </DropdownMenuContent>
             </DropdownMenu>
             <Button onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -281,6 +241,8 @@ export default function TasksPage() {
         task={selectedTask}
         open={!!selectedTask}
         onOpenChange={(open) => !open && setSelectedTask(null)}
+        projects={projects}
+        onSuccess={fetchTasks}
       />
     </DashboardLayout>
   );

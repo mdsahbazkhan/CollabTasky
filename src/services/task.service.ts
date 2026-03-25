@@ -28,3 +28,14 @@ export const updateStatus = async (taskId: string, status: string) => {
   const res = await API.patch(`/tasks/${taskId}/status`, { status });
   return res.data.task;
 };
+
+export const updateTask=async(  taskId: string,
+  taskData: Partial<CreateTaskData>
+)=> {
+  const res = await API.put(`/tasks/${taskId}`, taskData);
+  return res.data.task;
+}
+export const deleteTask=async(taskId:string)=>{
+  const res=await API.delete(`/tasks/${taskId}`)
+  return res.data
+}
