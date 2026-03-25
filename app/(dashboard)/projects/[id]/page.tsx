@@ -36,20 +36,6 @@ import { getAllUsers } from "@/src/services/auth.service";
 const project = null;
 
 const tasks: any[] = [];
-function getStatusColor(status: string) {
-  switch (status) {
-    case "Completed":
-      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-    case "Review":
-      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
-    case "inProgress":
-      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-    case "Todo":
-      return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
-    default:
-      return "bg-secondary text-secondary-foreground";
-  }
-}
 
 export default function ProjectDetailsPage() {
   const params = useParams();
@@ -234,17 +220,31 @@ export default function ProjectDetailsPage() {
     }
   };
   function getStatusColor(status: string) {
-  switch (status) {
-    case "active":
-      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-    case "archived":
-      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
-    case "completed":
-      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-    default:
-      return "bg-secondary text-secondary-foreground";
+    switch (status) {
+      case "active":
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+      case "archived":
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+      case "completed":
+        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+      default:
+        return "bg-secondary text-secondary-foreground";
+    }
   }
-}
+  function getTaskStatusColor(status: string) {
+    switch (status) {
+      case "completed":
+        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+      case "review":
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+      case "inProgress":
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+      case "todo":
+        return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+      default:
+        return "bg-secondary text-secondary-foreground";
+    }
+  }
 
   const getAssigneeInitials = (assignedTo: any) => {
     if (assignedTo && typeof assignedTo === "object" && assignedTo.name) {
@@ -414,31 +414,37 @@ export default function ProjectDetailsPage() {
               </Button>
             </div>
             <div className="space-y-2">
-              {tasks.map((task: any) => (
-                <Card
-                  key={task._id}
-                  className="transition-colors hover:bg-muted/50"
-                >
-                  <CardContent className="flex items-center gap-4 p-4">
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground">
-                        {task.title}
-                      </p>
-                    </div>
-                    <Badge
-                      variant="secondary"
-                      className={getStatusColor(getTaskStatus(task.status))}
-                    >
-                      {getTaskStatus(task.status)}
-                    </Badge>
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                        {getAssigneeInitials(task.assignedTo)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </CardContent>
-                </Card>
-              ))}
+              {tasks.length > 0 ? (
+                tasks.map((task: any) => (
+                  <Card
+                    key={task._id}
+                    className="transition-colors hover:bg-muted/50"
+                  >
+                    <CardContent className="flex items-center gap-4 p-4">
+                      <div className="flex-1">
+                        <p className="font-medium text-foreground">
+                          {task.title}
+                        </p>
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className={getTaskStatusColor(task.status)}
+                      >
+                        {getTaskStatus(task.status)}
+                      </Badge>
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                          {getAssigneeInitials(task.assignedTo)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  No tasks found
+                </p>
+              )}
             </div>
           </TabsContent>
 

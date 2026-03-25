@@ -28,11 +28,18 @@ interface TeamMember {
   initials?: string;
 }
 
+interface Project {
+  _id: string;
+  name: string;
+  members?: { _id: string; name: string }[];
+}
+
 interface CreateTaskModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId?: string;
   teamMembers?: TeamMember[];
+  projects?: Project[];
   onSuccess?: () => void;
 }
 
@@ -41,6 +48,7 @@ export function CreateTaskModal({
   onOpenChange,
   projectId,
   teamMembers,
+  projects,
   onSuccess,
 }: CreateTaskModalProps) {
   const [isLoading, setIsLoading] = React.useState(false);
@@ -50,6 +58,24 @@ export function CreateTaskModal({
   const [assignee, setAssignee] = React.useState("");
   const [dueDate, setDueDate] = React.useState("");
   const [tags, setTags] = React.useState("");
+  const [selectedProject, setSelectedProject] = React.useState(projectId || "");
+  const [projectMembers, setProjectMembers] = React.useState<
+    { _id: string; name: string }[]
+  >([]);
+
+  // Update team members when project changes
+  React.useEffect(() => {
+    if (projects && selectedProject) {
+      const project = projects.find((p) => p._id === selectedProject);
+      if (project && project.members) {
+        setProjectMembers(project.members);
+      } else {
+        setProjectMembers([]);
+      }
+    } else {
+      setProjectMembers([]);
+    }
+  }, [selectedProject, projects]);
 
   const resetForm = () => {
     setTitle("");
@@ -58,18 +84,27 @@ export function CreateTaskModal({
     setAssignee("");
     setDueDate("");
     setTags("");
+    setSelectedProject(projectId || "");
   };
+
+  // Set default project when modal opens
+  React.useEffect(() => {
+    if (open) {
+      setSelectedProject(projectId || "");
+    }
+  }, [open, projectId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !projectId) return;
+    const projectToUse = projectId || selectedProject;
+    if (!title.trim() || !projectToUse) return;
 
     setIsLoading(true);
     try {
       const taskData = {
         title: title.trim(),
         description: description.trim(),
-        project: projectId,
+        project: projectToUse,
         assignedTo: assignee || undefined,
         priority,
         dueDate: dueDate || undefined,
@@ -102,6 +137,28 @@ export function CreateTaskModal({
           <DialogDescription>Add a new task to this project.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Project Selector - Show when no projectId is provided and projects are available */}
+          {!projectId && projects && projects.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="project">Project</Label>
+              <Select
+                value={selectedProject}
+                onValueChange={setSelectedProject}
+              >
+                <SelectTrigger id="project">
+                  <SelectValue placeholder="Select a project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((proj) => (
+                    <SelectItem key={proj._id} value={proj._id}>
+                      {proj.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="title">Task Title</Label>
             <Input
@@ -141,7 +198,7 @@ export function CreateTaskModal({
 
             <div className="space-y-2">
               <Label htmlFor="assignee">Assignee</Label>
-              {teamMembers && teamMembers.length > 0 ? (
+              {projectMembers && projectMembers.length > 0 ? (
                 <Select
                   value={assignee || "unassigned"}
                   onValueChange={(val) =>
@@ -153,7 +210,7 @@ export function CreateTaskModal({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="unassigned">Unassigned</SelectItem>
-                    {teamMembers.map((member) => (
+                    {projectMembers.map((member) => (
                       <SelectItem key={member._id} value={member._id}>
                         {member.name}
                       </SelectItem>

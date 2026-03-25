@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -51,6 +52,8 @@ export function ProjectCard({
   viewMode,
   isAdmin = false,
 }: ProjectCardProps) {
+  const router = useRouter();
+
   if (viewMode === "list") {
     return (
       <Card className="transition-colors hover:bg-muted/50">
@@ -119,7 +122,11 @@ export function ProjectCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>View details</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => router.push(`/projects/${project._id}`)}
+              >
+                View details
+              </DropdownMenuItem>
               {isAdmin && (
                 <>
                   <DropdownMenuItem>Edit project</DropdownMenuItem>
@@ -164,7 +171,11 @@ export function ProjectCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>View details</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => router.push(`/projects/${project._id}`)}
+              >
+                View details
+              </DropdownMenuItem>
               {isAdmin && (
                 <>
                   <DropdownMenuItem>Edit project</DropdownMenuItem>

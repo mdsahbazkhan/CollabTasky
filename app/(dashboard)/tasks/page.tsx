@@ -9,6 +9,7 @@ import { KanbanBoard } from "@/components/tasks/kanban-board";
 import { CreateTaskModal } from "@/components/tasks/create-task-modal";
 import { TaskDetailsPanel } from "@/components/tasks/task-details-panel";
 import { getAllTask, updateStatus } from "@/src/services/task.service";
+import { getProjects } from "@/src/services/project.service";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +36,9 @@ export default function TasksPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [projects, setProjects] = React.useState<
+    { _id: string; name: string; members?: { _id: string; name: string }[] }[]
+  >([]);
 
   const handleDragEnd = async (taskId: string, newStatus: string) => {
     try {
@@ -81,8 +85,18 @@ export default function TasksPage() {
       console.log(error);
     }
   };
+
+  const fetchProjects = async () => {
+    try {
+      const data = await getProjects();
+      setProjects(data);
+    } catch (error) {
+      console.error("Failed to fetch projects:", error);
+    }
+  };
   React.useEffect(() => {
     fetchTasks();
+    fetchProjects();
   }, []);
 
   return (
@@ -139,6 +153,8 @@ export default function TasksPage() {
       <CreateTaskModal
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
+        projects={projects}
+        onSuccess={fetchTasks}
       />
 
       <TaskDetailsPanel
