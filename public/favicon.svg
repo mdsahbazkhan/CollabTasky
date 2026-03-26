@@ -1,0 +1,14 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Primary green background matching website theme -->
+  <rect width="180" height="180" rx="40" fill="#22C55E"/>
+  
+  <!-- Stylized "CT" monogram representing CollabTasky -->
+  <!-- Letter C -->
+  <path d="M85 60H110C130 60 145 75 145 95C145 115 130 130 110 130H85V115H110C120 115 125 110 125 95C125 80 120 75 110 75H85V60Z" fill="white"/>
+  
+  <!-- Letter T -->
+  <path d="M115 60V75H135V90H115V130H100V90H80V75H100V60H115Z" fill="#E2E8F0" opacity="0.95"/>
+  
+  <!-- Small accent dot representing AI/Intelligence -->
+  <circle cx="145" cy="60" r="8" fill="#4FE2AC"/>
+</svg>

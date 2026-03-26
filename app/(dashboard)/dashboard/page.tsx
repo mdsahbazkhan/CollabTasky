@@ -7,6 +7,7 @@ import { RecentTasks } from "@/components/dashboard/recent-tasks";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { ProjectOverview } from "@/components/dashboard/project-overview";
 import { useUser } from "@/src/contexts/user-context";
+import Image from "next/image";
 import {
   Card,
   CardContent,

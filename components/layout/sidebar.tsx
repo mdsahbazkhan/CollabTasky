@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/src/lib/utils";
 import {
@@ -96,8 +97,14 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
         <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
           {!collapsed && (
             <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <Sparkles className="h-4 w-4 text-primary-foreground" />
+              <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg">
+                <Image
+                  src="/favicon.svg"
+                  alt="CollabTasky"
+                  width={32}
+                  height={32}
+                  className="h-full w-full object-cover"
+                />
               </div>
               <span className="font-semibold text-sidebar-foreground">
                 CollabTasky
@@ -105,8 +112,14 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
             </Link>
           )}
           {collapsed && (
-            <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Sparkles className="h-4 w-4 text-primary-foreground" />
+            <div className="relative mx-auto flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg">
+              <Image
+                src="/favicon.svg"
+                alt="CollabTasky"
+                width={32}
+                height={32}
+                className="h-full w-full object-cover"
+              />
             </div>
           )}
           <Button

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Sparkles, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ export default function SignupPage() {
         email: form.email,
         password: form.password,
       });
-      
+
       // store token (auto login)
       localStorage.setItem("token", res.token);
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -61,8 +62,14 @@ export default function SignupPage() {
               </h3>
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/20">
-                    <Sparkles className="h-4 w-4 text-primary" />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg overflow-hidden">
+                    <Image
+                      src="/favicon.svg"
+                      alt="CollabTasky"
+                      width={32}
+                      height={32}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <div>
                     <p className="font-medium text-foreground">
@@ -109,8 +116,14 @@ export default function SignupPage() {
       <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm lg:w-96">
           <div className="flex items-center gap-2 mb-8">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
+            <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg">
+              <Image
+                src="/favicon.svg"
+                alt="CollabTasky"
+                width={40}
+                height={40}
+                className="h-full w-full object-cover"
+              />
             </div>
             <span className="text-2xl font-bold text-foreground">
               CollabTasky

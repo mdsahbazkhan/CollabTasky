@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 import {
   Sparkles,
   Send,
@@ -127,8 +128,14 @@ export default function AIAssistantPage() {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/60">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
+            <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg">
+              <Image
+                src="/favicon.svg"
+                alt="CollabTasky AI"
+                width={40}
+                height={40}
+                className="h-full w-full object-cover"
+              />
             </div>
             <div>
               <h2 className="font-semibold text-foreground">CollabTasky AI</h2>
@@ -164,8 +171,16 @@ export default function AIAssistantPage() {
               >
                 <Avatar className="h-8 w-8 shrink-0">
                   {message.role === "assistant" ? (
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      <Sparkles className="h-4 w-4" />
+                    <AvatarFallback className="bg-primary">
+                      <div className="relative h-4 w-4">
+                        <Image
+                          src="/favicon.svg"
+                          alt="AI"
+                          width={16}
+                          height={16}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
                     </AvatarFallback>
                   ) : (
                     <AvatarFallback className="bg-secondary text-secondary-foreground">
@@ -220,8 +235,16 @@ export default function AIAssistantPage() {
             {isLoading && (
               <div className="flex gap-3">
                 <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    <Sparkles className="h-4 w-4" />
+                  <AvatarFallback className="bg-primary">
+                    <div className="relative h-4 w-4">
+                      <Image
+                        src="/favicon.svg"
+                        alt="AI"
+                        width={16}
+                        height={16}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
                   </AvatarFallback>
                 </Avatar>
                 <Card className="bg-muted">
