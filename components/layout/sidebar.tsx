@@ -66,11 +66,23 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
-  const { user, switchRole, isAdmin } = useUser();
+  const { user, loading, switchRole, isAdmin } = useUser();
 
   const filteredNavigation = navigation.filter(
     (item) => !item.adminOnly || isAdmin,
   );
+
+  // Computed user properties with fallbacks
+  const userInitials = user?.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "?";
+  const userAvatar = user?.avatar || "";
+  const userName = user?.name || "Guest";
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -204,87 +216,89 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
         </div>
 
         {/* User */}
-        <div className="border-t border-sidebar-border p-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 hover:bg-sidebar-accent transition-colors",
-                  collapsed && "justify-center px-0",
-                )}
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                    {user.initials}
-                  </AvatarFallback>
-                </Avatar>
-                {!collapsed && (
-                  <div className="flex flex-col items-start text-left">
-                    <span className="text-sm font-medium text-sidebar-foreground">
-                      {user.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground capitalize flex items-center gap-1">
-                      {isAdmin ? (
-                        <Shield className="h-3 w-3" />
-                      ) : (
-                        <User className="h-3 w-3" />
-                      )}
-                      {user.role}
+        {(user || loading) && (
+          <div className="border-t border-sidebar-border p-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-lg px-3 py-2 hover:bg-sidebar-accent transition-colors",
+                    collapsed && "justify-center px-0",
+                  )}
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={userAvatar} alt={userName} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {userInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  {!collapsed && (
+                    <div className="flex flex-col items-start text-left">
+                      <span className="text-sm font-medium text-sidebar-foreground">
+                        {userName}
+                      </span>
+                      <span className="text-xs text-muted-foreground capitalize flex items-center gap-1">
+                        {isAdmin ? (
+                          <Shield className="h-3 w-3" />
+                        ) : (
+                          <User className="h-3 w-3" />
+                        )}
+                        {isAdmin ? "Admin" : "Member"}
+                      </span>
+                    </div>
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col">
+                    <span>{userName}</span>
+                    <span className="text-xs font-normal text-muted-foreground">
+                      {user?.email}
                     </span>
                   </div>
-                )}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col">
-                  <span>{user.name}</span>
-                  <span className="text-xs font-normal text-muted-foreground">
-                    {user.email}
-                  </span>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-xs text-muted-foreground">
-                Switch Role (Demo)
-              </DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => switchRole("admin")}
-                className={cn(isAdmin && "bg-accent")}
-              >
-                <Shield className="mr-2 h-4 w-4" />
-                Admin
-                {isAdmin && (
-                  <Badge variant="secondary" className="ml-auto text-xs">
-                    Active
-                  </Badge>
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => switchRole("member")}
-                className={cn(!isAdmin && "bg-accent")}
-              >
-                <User className="mr-2 h-4 w-4" />
-                Member
-                {!isAdmin && (
-                  <Badge variant="secondary" className="ml-auto text-xs">
-                    Active
-                  </Badge>
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/settings">Settings</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/login" className="text-destructive">
-                  Sign Out
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                  Switch Role (Demo)
+                </DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => switchRole("admin")}
+                  className={cn(isAdmin && "bg-accent")}
+                >
+                  <Shield className="mr-2 h-4 w-4" />
+                  Admin
+                  {isAdmin && (
+                    <Badge variant="secondary" className="ml-auto text-xs">
+                      Active
+                    </Badge>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => switchRole("member")}
+                  className={cn(!isAdmin && "bg-accent")}
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  Member
+                  {!isAdmin && (
+                    <Badge variant="secondary" className="ml-auto text-xs">
+                      Active
+                    </Badge>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/settings">Settings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/login" className="text-destructive">
+                    Sign Out
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </aside>
     </TooltipProvider>
   );

@@ -25,7 +25,19 @@ interface NavbarProps {
 
 export function Navbar({ title = "Dashboard", onMenuClick }: NavbarProps) {
   const { setTheme, theme } = useTheme();
-  const { user, isAdmin } = useUser();
+  const { user, loading, isAdmin } = useUser();
+
+  // Computed user properties with fallbacks
+  const userInitials = user?.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "?";
+  const userAvatar = user?.avatar || "";
+  const userName = user?.name || "Guest";
   const [notifications] = React.useState([
     {
       id: 1,
@@ -146,21 +158,21 @@ export function Navbar({ title = "Dashboard", onMenuClick }: NavbarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                  {user.initials}
-                </AvatarFallback>
-              </Avatar>
+              {(user || loading) && (
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={userAvatar} alt={userName} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium leading-none">
-                    {user.name}
-                  </p>
+                  <p className="text-sm font-medium leading-none">{userName}</p>
                   <Badge
                     variant={isAdmin ? "default" : "secondary"}
                     className="h-5 text-xs"
@@ -170,11 +182,11 @@ export function Navbar({ title = "Dashboard", onMenuClick }: NavbarProps) {
                     ) : (
                       <User className="mr-1 h-3 w-3" />
                     )}
-                    {user.role}
+                    {isAdmin ? "Admin" : "Member"}
                   </Badge>
                 </div>
                 <p className="text-xs leading-none text-muted-foreground">
-                  {user.email}
+                  {user?.email}
                 </p>
               </div>
             </DropdownMenuLabel>

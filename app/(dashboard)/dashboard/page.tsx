@@ -20,10 +20,17 @@ import { getProjects } from "@/src/services/project.service";
 import { getTasksByProject } from "@/src/services/task.service";
 
 export default function DashboardPage() {
-  const { user, isAdmin } = useUser();
+  const { user, loading: userLoading, isAdmin } = useUser();
   const [projects, setProjects] = useState<any[]>([]);
   const [activeTasks, setActiveTasks] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+
+  // Guard: don't render during SSG when user is not available
+  if (!user && !userLoading) {
+    return null;
+  }
+
+  const userName = user?.name?.split(" ")[0] || "User";
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -67,7 +74,7 @@ export default function DashboardPage() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h2 className="text-2xl font-semibold text-foreground">
-                    Welcome back, {user.name.split(" ")[0]}!
+                    Welcome back, {userName}!
                   </h2>
                   <Badge
                     variant={isAdmin ? "default" : "secondary"}
@@ -78,7 +85,7 @@ export default function DashboardPage() {
                     ) : (
                       <User className="h-3 w-3" />
                     )}
-                    {user.role}
+                    {isAdmin ? "Admin" : "Member"}
                   </Badge>
                 </div>
                 <p className="text-muted-foreground">

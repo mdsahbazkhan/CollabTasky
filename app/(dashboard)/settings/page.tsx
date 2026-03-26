@@ -29,7 +29,26 @@ import { useUser } from "@/src/contexts/user-context";
 import { Badge } from "@/components/ui/badge";
 
 export default function SettingsPage() {
-  const { user, isAdmin } = useUser();
+  const { user, loading, isAdmin } = useUser();
+
+  // Guard: don't render during SSG when user is not available
+  if (!user && !loading) {
+    return null;
+  }
+
+  const userName = user?.name || "";
+  const userAvatar = user?.avatar || "";
+  const userInitials = user?.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "?";
+  const firstName = user?.name?.split(" ")[0] || "";
+  const lastName = user?.name?.split(" ")[1] || "";
+  const userEmail = user?.email || "";
 
   return (
     <DashboardLayout title="Settings">
@@ -74,9 +93,9 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-6">
                   <div className="relative">
                     <Avatar className="h-20 w-20">
-                      <AvatarImage src={user.avatar} alt="Profile" />
+                      <AvatarImage src={userAvatar} alt="Profile" />
                       <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                        {user.initials}
+                        {userInitials}
                       </AvatarFallback>
                     </Avatar>
                     <Button
@@ -105,21 +124,21 @@ export default function SettingsPage() {
                     <Label htmlFor="firstName">First Name</Label>
                     <Input
                       id="firstName"
-                      defaultValue={user.name.split(" ")[0]}
+                      defaultValue={firstName}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name</Label>
                     <Input
                       id="lastName"
-                      defaultValue={user.name.split(" ")[1] || ""}
+                      defaultValue={lastName || ""}
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" type="email" defaultValue={user.email} />
+                  <Input id="email" type="email" defaultValue={userEmail} />
                 </div>
 
                 <div className="space-y-2">
@@ -130,7 +149,7 @@ export default function SettingsPage() {
                     </span>
                     <Input
                       id="username"
-                      defaultValue={user.name.toLowerCase().replace(" ", "")}
+                      defaultValue={userName.toLowerCase().replace(" ", "")}
                       className="rounded-l-none"
                     />
                   </div>
