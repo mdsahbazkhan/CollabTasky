@@ -5,9 +5,9 @@ export const getProjects = async () => {
   return res.data.projects;
 };
 
-export const getProjectById = async (projectId: string) => {
+export const getProjectByIdAPI = async (projectId: string) => {
   const res = await API.get(`/projects/${projectId}`);
-  return res.data.project;
+  return res.data;
 };
 
 export const createProject = async (projectData: any) => {
@@ -20,8 +20,15 @@ export const updateProject = async (projectId: string, projectData: any) => {
   return res.data.project;
 };
 
-export const addMember = async (projectId: string, userId: string) => {
-  const res = await API.post(`/projects/${projectId}/members`, { userId });
+export const addMember = async (
+  projectId: string,
+  userId: string,
+  role: string,
+) => {
+  const res = await API.post(`/projects/${projectId}/members`, {
+    userId,
+    role,
+  });
   return res.data;
 };
 

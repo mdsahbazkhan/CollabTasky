@@ -130,8 +130,8 @@ export function ProjectOverview({ projects }: { projects: any[] }) {
                       .slice(0, 3)
                       .map((member: any, idx: number) => {
                         const initials =
-                          typeof member === "object" && member.name
-                            ? member.name
+                          typeof member === "object" && member.user.name
+                            ? member.user.name
                                 .split(" ")
                                 .map((n: string) => n[0])
                                 .join("")

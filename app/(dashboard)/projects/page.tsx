@@ -145,21 +145,24 @@ export default function ProjectsPage() {
               ...project,
               // Handle members - could be populated with name or just IDs
               members: (project.members || []).map((m: any) => {
-                if (typeof m === "object" && m.name) {
-                  // Populated member object
+                if (m.user && m.user.name) {
                   return {
-                    name: m.name,
-                    initials: m.name
+                    _id: m.user._id,
+                    name: m.user.name,
+                    initials: m.user.name
                       .split(" ")
                       .map((n: string) => n[0])
                       .join("")
                       .toUpperCase(),
+                    role: m.role,
                   };
                 }
-                // Just ID - placeholder until backend populates
+
                 return {
+                  _id: m._id || "unknown",
                   name: "Member",
                   initials: "?",
+                  role: "member",
                 };
               }),
               progress: taskData.progress ?? project.progress ?? 0,

@@ -28,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CreateTaskModal } from "@/components/tasks/create-task-modal";
-import { getProjectById } from "@/src/services/project.service";
+import { getProjectByIdAPI } from "@/src/services/project.service";
 import { getTasksByProject } from "@/src/services/task.service";
 import AddMemberModal from "@/components/projects/AddMemberModal";
 import { getAllUsers } from "@/src/services/auth.service";
@@ -52,8 +52,12 @@ export default function ProjectDetailsPage() {
   const [users, setUsers] = React.useState([]);
   const fetchProject = async () => {
     try {
-      const projectData = await getProjectById(projectId);
-      setProject(projectData);
+      const projectData = await getProjectByIdAPI(projectId);
+
+      setProject({
+        ...projectData.project,
+        role: projectData.role,
+      });
     } catch (error) {
       console.error(error);
     }
@@ -162,11 +166,11 @@ export default function ProjectDetailsPage() {
 
   // Process members to handle both populated and non-populated
   const processedMembers = (project.members || []).map((m: any) => {
-    if (typeof m === "object" && m.name) {
+    if (m.user && m.user.name) {
       return {
-        _id: m._id,
-        name: m.name,
-        initials: m.name
+        _id: m.user._id,
+        name: m.user.name,
+        initials: m.user.name
           .split(" ")
           .map((n: string) => n[0])
           .join("")
@@ -174,8 +178,9 @@ export default function ProjectDetailsPage() {
         role: m.role || "Member",
       };
     }
+
     return {
-      _id: m,
+      _id: m._id,
       name: "Member",
       initials: "?",
       role: "Member",
@@ -273,6 +278,7 @@ export default function ProjectDetailsPage() {
               <h1 className="text-2xl font-bold text-foreground">
                 {project.name}
               </h1>
+              <Badge variant="outline">{project.role?.toUpperCase()}</Badge>
               <Badge
                 variant="secondary"
                 className={getStatusColor(project.status)}
@@ -282,10 +288,12 @@ export default function ProjectDetailsPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
+            {(project.role === "owner" || project.role === "admin") && (
+              <Button variant="outline" size="sm">
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon">
@@ -453,10 +461,12 @@ export default function ProjectDetailsPage() {
               <h3 className="text-lg font-semibold text-foreground">
                 Team Members
               </h3>
-              <Button size="sm" onClick={() => setOpenMemberModal(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Member
-              </Button>
+              {(project.role === "owner" || project.role === "admin") && (
+                <Button size="sm" onClick={() => setOpenMemberModal(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Member
+                </Button>
+              )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {processedMembers.map((member: any, idx: number) => (

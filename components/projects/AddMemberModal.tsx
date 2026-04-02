@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { addMember } from "@/src/services/project.service";
+import { toast } from "sonner";
 
 export default function AddMemberModal({
   open,
@@ -25,6 +26,7 @@ export default function AddMemberModal({
   refreshProject,
 }: any) {
   const [selectedUser, setSelectedUser] = useState("");
+  const [selectedRole, setSelectedRole] = useState("member");
   const [loading, setLoading] = useState(false);
 
   const handleAdd = async () => {
@@ -33,12 +35,12 @@ export default function AddMemberModal({
     try {
       setLoading(true);
 
-      await addMember(projectId, selectedUser);
-
+      await addMember(projectId, selectedUser, selectedRole);
+      toast.success("Member added");
       refreshProject();
       onOpenChange(false);
     } catch (err) {
-      console.log(err);
+      toast.error("Failed to add member");
     } finally {
       setLoading(false);
     }
@@ -59,9 +61,19 @@ export default function AddMemberModal({
           <SelectContent>
             {users.map((user: any) => (
               <SelectItem key={user._id} value={user._id}>
-                {user.name}
+                {user.name} ({user.email})
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select onValueChange={setSelectedRole} defaultValue="member">
+          <SelectTrigger>
+            <SelectValue placeholder="Select role" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value="member">Member</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
           </SelectContent>
         </Select>
 

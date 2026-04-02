@@ -7,6 +7,7 @@ import {
   updateProject,
   addMember,
   deleteProject,
+  getProjectByIdAPI,
 } from "@/src/services/project.service";
 import { toast } from "sonner";
 
@@ -27,6 +28,7 @@ export interface Project {
   startDate?: string;
   endDate?: string;
   createdAt?: string;
+  role?: "owner" | "admin" | "member";
 }
 
 interface ProjectContextType {
@@ -139,8 +141,18 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const getProjectById = (id: string): Project | undefined => {
-    return projects.find((p) => p._id === id);
+  const getProjectById = async (id: string) => {
+    try {
+      const res = await getProjectByIdAPI(id);
+
+      return {
+        ...res.project,
+        role: res.role,
+      };
+    } catch (err) {
+      toast.error("Failed to fetch project");
+      return null;
+    }
   };
 
   const value = React.useMemo(

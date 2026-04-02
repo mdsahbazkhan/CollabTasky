@@ -77,7 +77,7 @@ export default function DashboardPage() {
                   <h2 className="text-2xl font-semibold text-foreground">
                     Welcome back, {userName}!
                   </h2>
-                  <Badge
+                  {/* <Badge
                     variant={isAdmin ? "default" : "secondary"}
                     className="gap-1"
                   >
@@ -87,7 +87,7 @@ export default function DashboardPage() {
                       <User className="h-3 w-3" />
                     )}
                     {isAdmin ? "Admin" : "Member"}
-                  </Badge>
+                  </Badge> */}
                 </div>
                 <p className="text-muted-foreground">
                   {isAdmin
