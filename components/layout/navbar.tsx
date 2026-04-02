@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useUser } from "@/src/contexts/user-context";
+import { removeAuthToken } from "@/src/lib/auth";
 
 interface NavbarProps {
   title?: string;
@@ -203,8 +204,14 @@ export function Navbar({ title = "Dashboard", onMenuClick }: NavbarProps) {
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="text-destructive">
-              <Link href="/login">Log out</Link>
+            <DropdownMenuItem
+              onClick={() => {
+                removeAuthToken();
+                window.location.href = "/login";
+              }}
+              className="text-destructive"
+            >
+              Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

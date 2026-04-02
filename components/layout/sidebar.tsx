@@ -36,7 +36,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useUser, type UserRole } from "@/src/contexts/user-context";
+import { useUser } from "@/src/contexts/user-context";
+import { removeAuthToken } from "@/src/lib/auth";
 import { Badge } from "@/components/ui/badge";
 
 type NavItem = {
@@ -303,10 +304,14 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                 <DropdownMenuItem asChild>
                   <Link href="/settings">Settings</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/login" className="text-destructive">
-                    Sign Out
-                  </Link>
+                <DropdownMenuItem
+                  onClick={() => {
+                    removeAuthToken();
+                    window.location.href = "/login";
+                  }}
+                  className="text-destructive"
+                >
+                  Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

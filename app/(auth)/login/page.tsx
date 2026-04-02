@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { loginUser } from "@/src/services/auth.service";
+import { setAuthToken } from "@/src/lib/auth";
 import Link from "next/link";
 import Image from "next/image";
 import { Sparkles, Mail, Lock, Eye, EyeOff } from "lucide-react";
@@ -27,7 +28,7 @@ export default function LoginPage() {
       const res = await loginUser(form);
       await new Promise((resolve) => setTimeout(resolve, 500));
       // store token
-      localStorage.setItem("token", res.token);
+      setAuthToken(res.token);
 
       toast.success("Login Success ✅");
 

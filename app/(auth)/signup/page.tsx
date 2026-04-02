@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { signupUser } from "@/src/services/auth.service";
+import { setAuthToken } from "@/src/lib/auth";
 import { toast } from "sonner";
 
 export default function SignupPage() {
@@ -34,7 +35,7 @@ export default function SignupPage() {
       });
 
       // store token (auto login)
-      localStorage.setItem("token", res.token);
+      setAuthToken(res.token);
       await new Promise((resolve) => setTimeout(resolve, 500));
       toast.success("Account created successfully");
       router.push("/dashboard");
