@@ -127,9 +127,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const addProjectMember = async (
     projectId: string,
     userId: string,
+    role: string,
   ): Promise<boolean> => {
     try {
-      await addMember(projectId, userId);
+      await addMember(projectId, userId, role);
       toast.success("Member added successfully");
       await fetchProjects(); // Refresh to get updated member list
       return true;
