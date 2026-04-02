@@ -39,3 +39,8 @@ export const deleteTask=async(taskId:string)=>{
   const res=await API.delete(`/tasks/${taskId}`)
   return res.data
 }
+
+export const getRecentTasks = async () => {
+  const res = await API.get("/tasks/recent");
+  return res.data.tasks;
+};
