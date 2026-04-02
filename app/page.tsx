@@ -56,117 +56,6 @@ const steps = [
   },
 ];
 
-// ─── Kanban mockup ────────────────────────────────────────────────────────────
-
-function KanbanMockup() {
-  const columns = [
-    {
-      title: "To Do",
-      labelClass: "text-muted-foreground",
-      dotClass: "bg-muted-foreground",
-      tasks: [
-        {
-          title: "Design system update",
-          tag: "Design",
-          tagClass: "bg-primary/20 text-primary",
-        },
-        {
-          title: "API integration",
-          tag: "Dev",
-          tagClass: "bg-blue-500/20 text-blue-400",
-        },
-      ],
-    },
-    {
-      title: "In Progress",
-      labelClass: "text-yellow-400",
-      dotClass: "bg-yellow-400",
-      tasks: [
-        {
-          title: "Dashboard redesign",
-          tag: "UI/UX",
-          tagClass: "bg-yellow-500/20 text-yellow-400",
-        },
-        {
-          title: "Auth flow refactor",
-          tag: "Dev",
-          tagClass: "bg-blue-500/20 text-blue-400",
-        },
-      ],
-    },
-    {
-      title: "Done",
-      labelClass: "text-primary",
-      dotClass: "bg-primary",
-      tasks: [
-        {
-          title: "User research",
-          tag: "Research",
-          tagClass: "bg-primary/20 text-primary",
-        },
-        {
-          title: "Sprint planning",
-          tag: "Planning",
-          tagClass: "bg-purple-500/20 text-purple-400",
-        },
-      ],
-    },
-  ];
-
-  return (
-    <div className="rounded-xl border border-border bg-card p-4 shadow-2xl shadow-black/50">
-      {/* Window chrome */}
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
-        <span className="size-3 rounded-full bg-red-500/70" />
-        <span className="size-3 rounded-full bg-yellow-500/70" />
-        <span className="size-3 rounded-full bg-green-500/70" />
-        <span className="text-xs text-muted-foreground ml-2 font-medium">
-          CollabTasky — Sprint 12
-        </span>
-        <span className="ml-auto text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">
-          Active Sprint
-        </span>
-      </div>
-
-      {/* Columns */}
-      <div className="grid grid-cols-3 gap-3">
-        {columns.map((col) => (
-          <div key={col.title}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`size-2 rounded-full ${col.dotClass}`} />
-              <span
-                className={`text-xs font-semibold uppercase tracking-wider ${col.labelClass}`}
-              >
-                {col.title}
-              </span>
-              <span className="ml-auto text-xs text-muted-foreground bg-muted rounded px-1.5 py-0.5">
-                {col.tasks.length}
-              </span>
-            </div>
-            <div className="space-y-2">
-              {col.tasks.map((task) => (
-                <div
-                  key={task.title}
-                  className="rounded-lg border border-border bg-background p-2.5 space-y-1.5 hover:border-primary/40 transition-colors"
-                >
-                  <p className="text-xs font-medium text-foreground leading-snug">
-                    {task.title}
-                  </p>
-                  <span
-                    className={`inline-block text-[10px] font-medium px-1.5 py-0.5 rounded ${task.tagClass}`}
-                  >
-                    {task.tag}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -199,12 +88,12 @@ export default function Home() {
               >
                 Features
               </Link>
-              <Link
+              {/* <Link
                 href="#pricing"
                 className="hover:text-foreground transition-colors"
               >
                 Pricing
-              </Link>
+              </Link> */}
               <Link
                 href="#about"
                 className="hover:text-foreground transition-colors"
@@ -219,7 +108,7 @@ export default function Home() {
                 <Link href="/login">Login</Link>
               </Button>
               <Button size="sm" asChild>
-                <Link href="/signup">Get Started</Link>
+                <Link href="/signup">Start Free</Link>
               </Button>
             </div>
           </div>
@@ -230,7 +119,7 @@ export default function Home() {
       <section className="relative overflow-hidden py-24 sm:py-32">
         {/* Ambient glow */}
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute left-1/2 top-0 -translate-x-1/2 h-105 w-175 rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[420px] w-[700px] rounded-full bg-primary/10 blur-3xl" />
         </div>
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
@@ -242,21 +131,22 @@ export default function Home() {
 
           {/* Heading */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-6">
-            Manage Projects Smarter
+            The Smarter Way to Manage
             <br className="hidden sm:block" />
-            <span className="text-primary"> with AI 🚀</span>
+            <span className="text-primary"> Projects & Teams 🚀</span>
           </h1>
 
           {/* Subheading */}
           <p className="mx-auto max-w-2xl text-base sm:text-lg text-muted-foreground mb-10 leading-relaxed">
-            Plan, track, and collaborate with your team using an AI-powered
-            project management platform.
+            Plan, track, and collaborate with your team using powerful Kanban
+            boards, real-time updates, and AI-driven insights — all in one
+            place.
           </p>
 
           {/* CTA buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <Button size="lg" asChild className="px-8">
-              <Link href="/register">
+              <Link href="/signup">
                 Get Started <ArrowRight className="size-4" />
               </Link>
             </Button>
@@ -267,7 +157,13 @@ export default function Home() {
 
           {/* Dashboard preview */}
           <div className="mx-auto max-w-3xl">
-            <KanbanMockup />
+            <Image
+              src="/dashboard.png"
+              alt="Dashboard Preview"
+              width={1000}
+              height={600}
+              className="rounded-xl border shadow-2xl shadow-black/40 hover:scale-[1.02] transition duration-300"
+            />
           </div>
         </div>
       </section>
@@ -288,7 +184,7 @@ export default function Home() {
             {features.map(({ icon: Icon, title, description }) => (
               <Card
                 key={title}
-                className="bg-card border-border hover:border-primary/40 transition-colors group"
+                className="bg-card border-border hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 group"
               >
                 <CardHeader className="pb-3">
                   <div className="size-10 rounded-lg bg-primary/15 flex items-center justify-center mb-3 group-hover:bg-primary/25 transition-colors">
@@ -327,114 +223,13 @@ export default function Home() {
 
           {/* App frame */}
           <div className="mx-auto max-w-4xl rounded-2xl border border-border bg-card p-3 sm:p-4 shadow-2xl shadow-black/50">
-            <div className="rounded-xl border border-border bg-background overflow-hidden">
-              {/* Topbar */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
-                <span className="size-3 rounded-full bg-red-500/70" />
-                <span className="size-3 rounded-full bg-yellow-500/70" />
-                <span className="size-3 rounded-full bg-green-500/70" />
-                <span className="text-xs text-muted-foreground font-medium ml-1">
-                  Dashboard · Sprint 12
-                </span>
-                <div className="ml-auto flex items-center gap-1.5">
-                  {["A", "B", "C"].map((letter, i) => (
-                    <span
-                      key={letter}
-                      className={`size-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                        i === 0
-                          ? "bg-primary/30 text-primary"
-                          : i === 1
-                            ? "bg-blue-500/30 text-blue-400"
-                            : "bg-purple-500/30 text-purple-400"
-                      }`}
-                    >
-                      {letter}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Body */}
-              <div className="flex min-h-75">
-                {/* Sidebar */}
-                <div className="hidden sm:flex flex-col w-44 border-r border-border bg-card/50 p-3 gap-1 shrink-0">
-                  {[
-                    "Dashboard",
-                    "Projects",
-                    "My Tasks",
-                    "Kanban",
-                    "Team",
-                    "Reports",
-                  ].map((item, i) => (
-                    <div
-                      key={item}
-                      className={`text-xs px-2.5 py-1.5 rounded-md font-medium cursor-default transition-colors ${
-                        i === 3
-                          ? "bg-primary/20 text-primary"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {item}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Main */}
-                <div className="flex-1 p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold">Kanban Board</h3>
-                    <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">
-                      Active Sprint
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      {
-                        col: "To Do",
-                        tasks: ["Design mockups", "Write specs"],
-                        labelClass: "text-muted-foreground",
-                        dotClass: "bg-muted-foreground",
-                      },
-                      {
-                        col: "In Progress",
-                        tasks: ["Auth refactor", "API routes"],
-                        labelClass: "text-yellow-400",
-                        dotClass: "bg-yellow-400",
-                      },
-                      {
-                        col: "Done",
-                        tasks: ["DB schema", "Landing page"],
-                        labelClass: "text-primary",
-                        dotClass: "bg-primary",
-                      },
-                    ].map(({ col, tasks, labelClass, dotClass }) => (
-                      <div key={col}>
-                        <div className="flex items-center gap-1.5 mb-2">
-                          <span
-                            className={`size-1.5 rounded-full ${dotClass}`}
-                          />
-                          <span
-                            className={`text-[10px] font-semibold uppercase tracking-wider ${labelClass}`}
-                          >
-                            {col}
-                          </span>
-                        </div>
-                        <div className="space-y-1.5">
-                          {tasks.map((t) => (
-                            <div
-                              key={t}
-                              className="rounded border border-border bg-card p-2 text-[10px] text-foreground font-medium"
-                            >
-                              {t}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <Image
+              src="/kanban.png"
+              alt="Kanban Preview"
+              width={1000}
+              height={600}
+              className="rounded-xl border shadow-2xl shadow-black/50"
+            />
           </div>
         </div>
       </section>
@@ -499,8 +294,8 @@ export default function Home() {
               and smarter.
             </p>
             <Button size="lg" asChild className="px-10">
-              <Link href="/register">
-                Get Started <ArrowRight className="size-4" />
+              <Link href="/signup">
+                Start Free Today <ArrowRight className="size-4" />
               </Link>
             </Button>
           </div>
