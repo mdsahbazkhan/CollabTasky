@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Sparkles, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { Lock, Eye, EyeOff, User, Mail, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,10 +13,29 @@ import { signupUser } from "@/src/services/auth.service";
 import { setAuthToken } from "@/src/lib/auth";
 import { toast } from "sonner";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getPasswordChecks(password: string) {
+  return {
+    length: password.length >= 8 && password.length <= 10,
+    hasUppercase: /[A-Z]/.test(password),
+    hasLowercase: /[a-z]/.test(password),
+    hasNumber: /[0-9]/.test(password),
+    hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+  };
+}
+
+function isPasswordStrong(password: string) {
+  const checks = getPasswordChecks(password);
+  return Object.values(checks).every(Boolean);
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [termsAccepted, setTermsAccepted] = React.useState(false);
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [form, setForm] = React.useState({
     firstName: "",
     lastName: "",
@@ -24,24 +43,53 @@ export default function SignupPage() {
     password: "",
   });
 
+  const passwordChecks = getPasswordChecks(form.password);
+  const showPasswordHints = form.password.length > 0;
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!form.firstName.trim()) newErrors.firstName = "First name is required";
+    if (!form.lastName.trim()) newErrors.lastName = "Last name is required";
+
+    if (!form.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!EMAIL_REGEX.test(form.email)) {
+      newErrors.email = "Enter a valid email address";
+    }
+
+    if (!form.password) {
+      newErrors.password = "Password is required";
+    } else if (!isPasswordStrong(form.password)) {
+      newErrors.password = "Password does not meet all requirements";
+    }
+
+    if (!termsAccepted) {
+      newErrors.terms = "You must accept the Terms of Service";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
+
     setIsLoading(true);
     try {
       const res = await signupUser({
-        name: form.firstName + " " + form.lastName,
-        email: form.email,
+        name: form.firstName.trim() + " " + form.lastName.trim(),
+        email: form.email.trim(),
         password: form.password,
       });
 
-      // store token (auto login)
       setAuthToken(res.token);
       await new Promise((resolve) => setTimeout(resolve, 500));
       toast.success("Account created successfully");
       router.push("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-
       const message =
         error?.response?.data?.message || "Failed to create account ❌";
       toast.error(message);
@@ -49,6 +97,14 @@ export default function SignupPage() {
       setIsLoading(false);
     }
   };
+
+  const requirementItems = [
+    { key: "length", label: "8–10 characters" },
+    { key: "hasUppercase", label: "One uppercase letter (A–Z)" },
+    { key: "hasLowercase", label: "One lowercase letter (a–z)" },
+    { key: "hasNumber", label: "One number (0–9)" },
+    { key: "hasSpecial", label: "One special character (!@#$%^&*...)" },
+  ] as const;
 
   return (
     <div className="flex min-h-screen">
@@ -155,12 +211,17 @@ export default function SignupPage() {
                     id="firstName"
                     name="firstName"
                     type="text"
-                    required
                     placeholder="John"
-                    onChange={(e) =>
-                      setForm({ ...form, firstName: e.target.value })
-                    }
+                    className={errors.firstName ? "border-destructive" : ""}
+                    onChange={(e) => {
+                      setForm({ ...form, firstName: e.target.value });
+                      if (errors.firstName)
+                        setErrors({ ...errors, firstName: "" });
+                    }}
                   />
+                  {errors.firstName && (
+                    <p className="text-xs text-destructive">{errors.firstName}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last name</Label>
@@ -168,12 +229,17 @@ export default function SignupPage() {
                     id="lastName"
                     name="lastName"
                     type="text"
-                    required
                     placeholder="Doe"
-                    onChange={(e) =>
-                      setForm({ ...form, lastName: e.target.value })
-                    }
+                    className={errors.lastName ? "border-destructive" : ""}
+                    onChange={(e) => {
+                      setForm({ ...form, lastName: e.target.value });
+                      if (errors.lastName)
+                        setErrors({ ...errors, lastName: "" });
+                    }}
                   />
+                  {errors.lastName && (
+                    <p className="text-xs text-destructive">{errors.lastName}</p>
+                  )}
                 </div>
               </div>
 
@@ -186,14 +252,17 @@ export default function SignupPage() {
                     name="email"
                     type="email"
                     autoComplete="email"
-                    required
                     placeholder="name@company.com"
-                    className="pl-10"
-                    onChange={(e) =>
-                      setForm({ ...form, email: e.target.value })
-                    }
+                    className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
+                    onChange={(e) => {
+                      setForm({ ...form, email: e.target.value });
+                      if (errors.email) setErrors({ ...errors, email: "" });
+                    }}
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-xs text-destructive">{errors.email}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -205,12 +274,14 @@ export default function SignupPage() {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
-                    required
                     placeholder="Create a strong password"
-                    className="pl-10 pr-10"
-                    onChange={(e) =>
-                      setForm({ ...form, password: e.target.value })
-                    }
+                    maxLength={10}
+                    className={`pl-10 pr-10 ${errors.password ? "border-destructive" : ""}`}
+                    onChange={(e) => {
+                      setForm({ ...form, password: e.target.value });
+                      if (errors.password)
+                        setErrors({ ...errors, password: "" });
+                    }}
                   />
                   <button
                     type="button"
@@ -224,29 +295,67 @@ export default function SignupPage() {
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Must be at least 8 characters with a number and symbol
-                </p>
+
+                {/* Password strength requirements */}
+                {showPasswordHints && (
+                  <ul className="mt-2 space-y-1 rounded-md border bg-muted/40 px-3 py-2">
+                    {requirementItems.map(({ key, label }) => {
+                      const passed = passwordChecks[key];
+                      return (
+                        <li
+                          key={key}
+                          className={`flex items-center gap-2 text-xs ${
+                            passed ? "text-green-600" : "text-muted-foreground"
+                          }`}
+                        >
+                          {passed ? (
+                            <Check className="h-3 w-3 shrink-0 text-green-600" />
+                          ) : (
+                            <X className="h-3 w-3 shrink-0 text-muted-foreground" />
+                          )}
+                          {label}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+
+                {errors.password && (
+                  <p className="text-xs text-destructive">{errors.password}</p>
+                )}
               </div>
 
-              <div className="flex items-start space-x-2">
-                <Checkbox id="terms" className="mt-0.5" />
-                <Label
-                  htmlFor="terms"
-                  className="text-sm font-normal text-muted-foreground leading-snug"
-                >
-                  I agree to the{" "}
-                  <Link href="/terms" className="text-primary hover:underline">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link
-                    href="/privacy"
-                    className="text-primary hover:underline"
+              <div className="space-y-1">
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="terms"
+                    className="mt-0.5"
+                    checked={termsAccepted}
+                    onCheckedChange={(checked) => {
+                      setTermsAccepted(!!checked);
+                      if (errors.terms) setErrors({ ...errors, terms: "" });
+                    }}
+                  />
+                  <Label
+                    htmlFor="terms"
+                    className="text-sm font-normal text-muted-foreground leading-snug"
                   >
-                    Privacy Policy
-                  </Link>
-                </Label>
+                    I agree to the{" "}
+                    <Link href="/terms" className="text-primary hover:underline">
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      href="/privacy"
+                      className="text-primary hover:underline"
+                    >
+                      Privacy Policy
+                    </Link>
+                  </Label>
+                </div>
+                {errors.terms && (
+                  <p className="text-xs text-destructive pl-6">{errors.terms}</p>
+                )}
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>

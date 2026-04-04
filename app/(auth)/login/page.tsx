@@ -5,38 +5,50 @@ import { loginUser } from "@/src/services/auth.service";
 import { setAuthToken } from "@/src/lib/auth";
 import Link from "next/link";
 import Image from "next/image";
-import { Sparkles, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-// import { Checkbox } from "@/components/ui/checkbox";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = async (e: any) => {
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!form.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!EMAIL_REGEX.test(form.email)) {
+      newErrors.email = "Enter a valid email address";
+    }
+
+    if (!form.password) {
+      newErrors.password = "Password is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
+
     setIsLoading(true);
-
     try {
-      const res = await loginUser(form);
+      const res = await loginUser({ email: form.email.trim(), password: form.password });
       await new Promise((resolve) => setTimeout(resolve, 500));
-      // store token
       setAuthToken(res.token);
-
       toast.success("Login Success ✅");
-
-      // redirect
       window.location.href = "/dashboard";
     } catch (error: any) {
       console.error(error);
-
       const message = error?.response?.data?.message || "Login Failed ❌";
       toast.error(message);
     } finally {
@@ -90,14 +102,17 @@ export default function LoginPage() {
                     name="email"
                     type="email"
                     autoComplete="email"
-                    required
                     placeholder="name@company.com"
-                    className="pl-10"
-                    onChange={(e) =>
-                      setForm({ ...form, email: e.target.value })
-                    }
+                    className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
+                    onChange={(e) => {
+                      setForm({ ...form, email: e.target.value });
+                      if (errors.email) setErrors({ ...errors, email: "" });
+                    }}
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-xs text-destructive">{errors.email}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -117,12 +132,12 @@ export default function LoginPage() {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
-                    required
                     placeholder="Enter your password"
-                    className="pl-10 pr-10"
-                    onChange={(e) =>
-                      setForm({ ...form, password: e.target.value })
-                    }
+                    className={`pl-10 pr-10 ${errors.password ? "border-destructive" : ""}`}
+                    onChange={(e) => {
+                      setForm({ ...form, password: e.target.value });
+                      if (errors.password) setErrors({ ...errors, password: "" });
+                    }}
                   />
                   <button
                     type="button"
@@ -136,17 +151,10 @@ export default function LoginPage() {
                     )}
                   </button>
                 </div>
+                {errors.password && (
+                  <p className="text-xs text-destructive">{errors.password}</p>
+                )}
               </div>
-
-              {/* <div className="flex items-center space-x-2">
-                <Checkbox id="remember" />
-                <Label
-                  htmlFor="remember"
-                  className="text-sm font-normal text-muted-foreground"
-                >
-                  Remember me for 30 days
-                </Label>
-              </div> */}
 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign in"}
@@ -165,11 +173,8 @@ export default function LoginPage() {
               <blockquote className="text-xl font-medium text-foreground">
                 {`"CollabTasky helps teams manage projects, collaborate seamlessly, and boost productivity with AI-powered insights — all in one smart workspace."`}
               </blockquote>
-
               <div className="mt-6">
-                <p className="font-semibold text-foreground">
-                  CollabTasky Team
-                </p>
+                <p className="font-semibold text-foreground">CollabTasky Team</p>
                 <p className="text-sm text-muted-foreground">
                   AI Project Management Platform
                 </p>
