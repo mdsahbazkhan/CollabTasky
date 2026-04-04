@@ -17,6 +17,11 @@ export interface ProjectMember {
   email?: string;
 }
 
+export interface ProjectMemberResponse {
+  user: { _id: string; name: string; email?: string };
+  role: string;
+}
+
 export interface Project {
   _id: string;
   name: string;
@@ -24,7 +29,7 @@ export interface Project {
   color?: string;
   status: string;
   owner: string | { _id: string; name: string };
-  members: ProjectMember[];
+  members: ProjectMemberResponse[];
   startDate?: string;
   endDate?: string;
   createdAt?: string;
@@ -39,8 +44,8 @@ interface ProjectContextType {
   addProject: (data: Partial<Project>) => Promise<Project | null>;
   editProject: (id: string, data: Partial<Project>) => Promise<Project | null>;
   removeProject: (id: string) => Promise<boolean>;
-  addProjectMember: (projectId: string, userId: string) => Promise<boolean>;
-  getProjectById: (id: string) => Project | undefined;
+  addProjectMember: (projectId: string, userId: string, role: string) => Promise<boolean>;
+  getProjectById: (id: string) => Promise<Project | null>;
 }
 
 const ProjectContext = React.createContext<ProjectContextType | undefined>(

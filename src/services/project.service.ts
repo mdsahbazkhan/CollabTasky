@@ -31,7 +31,20 @@ export const addMember = async (
   });
   return res.data;
 };
+export const removeMember = async (projectId: string, userId: string) => {
+  const res = await API.delete(`/projects/${projectId}/members/${userId}`);
+  return res.data;
+};
 
+export const deleteMemberFromDB = async (userId: string) => {
+  const res = await API.delete(`/projects/members/${userId}`);
+  return res.data;
+};
+
+export const getProjectsCountByUser = async (userId: string) => {
+  const res = await API.get(`/projects/user/${userId}/count`);
+  return res.data.projectCount;
+};
 export const deleteProject = async (projectId: string) => {
   const res = await API.delete(`/projects/${projectId}`);
   return res.data;

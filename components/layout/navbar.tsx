@@ -174,17 +174,7 @@ export function Navbar({ title = "Dashboard", onMenuClick }: NavbarProps) {
               <div className="flex flex-col space-y-1">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium leading-none">{userName}</p>
-                  <Badge
-                    variant={isAdmin ? "default" : "secondary"}
-                    className="h-5 text-xs"
-                  >
-                    {isAdmin ? (
-                      <Shield className="mr-1 h-3 w-3" />
-                    ) : (
-                      <User className="mr-1 h-3 w-3" />
-                    )}
-                    {isAdmin ? "Admin" : "Member"}
-                  </Badge>
+                
                 </div>
                 <p className="text-xs leading-none text-muted-foreground">
                   {user?.email}

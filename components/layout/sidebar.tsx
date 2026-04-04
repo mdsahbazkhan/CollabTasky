@@ -38,20 +38,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useUser } from "@/src/contexts/user-context";
 import { removeAuthToken } from "@/src/lib/auth";
-import { Badge } from "@/components/ui/badge";
 
 type NavItem = {
   name: string;
   href: string;
   icon: React.ElementType;
-  adminOnly?: boolean;
 };
 
 const navigation: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Projects", href: "/projects", icon: FolderKanban },
   { name: "Tasks", href: "/tasks", icon: CheckSquare },
-  { name: "Team", href: "/team", icon: Users, adminOnly: true },
+  { name: "Team", href: "/team", icon: Users},
   { name: "Chat", href: "/chat", icon: MessageSquare },
   { name: "AI Assistant", href: "/ai", icon: Sparkles },
 ];
@@ -70,9 +68,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { user, loading, switchRole, isAdmin } = useUser();
 
-  const filteredNavigation = navigation.filter(
-    (item) => !item.adminOnly || isAdmin,
-  );
+ 
 
   // Computed user properties with fallbacks
   const userInitials = user?.name
@@ -85,6 +81,8 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
     : "?";
   const userAvatar = user?.avatar || "";
   const userName = user?.name || "Guest";
+
+  const filteredNavigation = navigation;
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -251,14 +249,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                       <span className="text-sm font-medium text-sidebar-foreground">
                         {userName}
                       </span>
-                      <span className="text-xs text-muted-foreground capitalize flex items-center gap-1">
-                        {isAdmin ? (
-                          <Shield className="h-3 w-3" />
-                        ) : (
-                          <User className="h-3 w-3" />
-                        )}
-                        {isAdmin ? "Admin" : "Member"}
-                      </span>
+                     
                     </div>
                   )}
                 </button>
@@ -273,33 +264,8 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel className="text-xs text-muted-foreground">
-                  Switch Role (Demo)
-                </DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={() => switchRole("admin")}
-                  className={cn(isAdmin && "bg-accent")}
-                >
-                  <Shield className="mr-2 h-4 w-4" />
-                  Admin
-                  {isAdmin && (
-                    <Badge variant="secondary" className="ml-auto text-xs">
-                      Active
-                    </Badge>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => switchRole("member")}
-                  className={cn(!isAdmin && "bg-accent")}
-                >
-                  <User className="mr-2 h-4 w-4" />
-                  Member
-                  {!isAdmin && (
-                    <Badge variant="secondary" className="ml-auto text-xs">
-                      Active
-                    </Badge>
-                  )}
-                </DropdownMenuItem>
+               
+              
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/settings">Settings</Link>

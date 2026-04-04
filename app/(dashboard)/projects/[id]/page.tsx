@@ -19,6 +19,7 @@ import {
   MoreHorizontal,
   Plus,
   Users,
+  Trash2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -28,11 +29,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CreateTaskModal } from "@/components/tasks/create-task-modal";
-import { getProjectByIdAPI } from "@/src/services/project.service";
+import { getProjectByIdAPI, removeMember } from "@/src/services/project.service";
 import { getTasksByProject } from "@/src/services/task.service";
 import AddMemberModal from "@/components/projects/AddMemberModal";
 import { getAllUsers } from "@/src/services/auth.service";
 import { EditProjectModal } from "@/components/projects/edit-project-modal";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function ProjectDetailsPage() {
   const params = useParams();
@@ -48,6 +60,9 @@ export default function ProjectDetailsPage() {
     React.useState(false);
   const [users, setUsers] = React.useState([]);
   const [editModalOpen, setEditModalOpen] = React.useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [memberToDelete, setMemberToDelete] = React.useState<{_id: string; name: string} | null>(null);
+  const [isRemoving, setIsRemoving] = React.useState<string | null>(null);
   const fetchProject = async () => {
     try {
       const projectData = await getProjectByIdAPI(projectId);
@@ -119,6 +134,29 @@ export default function ProjectDetailsPage() {
       setTotalTasks(total);
     } catch (error) {
       console.error("Failed to refresh tasks:", error);
+    }
+  };
+
+  const handleDeleteMember = (member: { _id: string; name: string }) => {
+    setMemberToDelete(member);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmRemoveMember = async () => {
+    if (!memberToDelete) return;
+    
+    setIsRemoving(memberToDelete._id);
+    setDeleteDialogOpen(false);
+    try {
+      await removeMember(projectId, memberToDelete._id);
+      await fetchProject();
+      setMemberToDelete(null);
+      toast.success(`${memberToDelete.name} has been removed from this project.`);
+    } catch (error) {
+      console.error("Failed to remove member:", error);
+      toast.error("Failed to remove member. Please try again.");
+    } finally {
+      setIsRemoving(null);
     }
   };
 
@@ -474,12 +512,31 @@ export default function ProjectDetailsPage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {processedMembers.map((member: any, idx: number) => (
                 <Card key={idx}>
-                  <CardContent className="flex flex-col items-center p-6 text-center">
+                  <CardContent className="flex flex-col items-center p-6 text-center relative">
                     <Avatar className="h-16 w-16 mb-4">
                       <AvatarFallback className="bg-primary text-primary-foreground text-lg">
                         {member.initials}
                       </AvatarFallback>
                     </Avatar>
+                    {(project.role === "owner" || project.role === "admin") && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem 
+                            className="text-destructive"
+                            onClick={() => handleDeleteMember({ _id: member._id, name: member.name })}
+                            disabled={isRemoving === member._id}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            {isRemoving === member._id ? "Removing..." : "Remove from project"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                     <p className="font-semibold text-foreground">
                       {member.name}
                     </p>
@@ -547,10 +604,28 @@ export default function ProjectDetailsPage() {
           onOpenChange={setEditModalOpen}
           project={project}
           onSuccess={() => {
-            // Optionally trigger a refresh here
             window.location.reload();
           }}
         />
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove Member</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove {memberToDelete?.name} from this project? Their tasks will be unassigned.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmRemoveMember}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

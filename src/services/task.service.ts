@@ -44,3 +44,13 @@ export const getRecentTasks = async () => {
   const res = await API.get("/tasks/recent");
   return res.data.tasks;
 };
+
+export const getTasksByUser = async (userId: string) => {
+  const res = await API.get(`/tasks/user/${userId}`);
+  return res.data.tasks;
+};
+
+export const getTasksCountByUser = async (userId: string) => {
+  const res = await API.get(`/tasks/user/${userId}/count`);
+  return res.data.taskCount;
+};

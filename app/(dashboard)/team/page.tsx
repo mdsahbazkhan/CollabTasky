@@ -1,13 +1,19 @@
 "use client";
 
-import * as React from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, Search, Mail, MoreHorizontal, Shield, Lock } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Mail,
+  MoreHorizontal,
+  Shield,
+  Lock,
+} from "lucide-react";
 import { InviteMemberModal } from "@/components/team/invite-member-modal";
 import {
   DropdownMenu,
@@ -16,107 +22,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useUser } from "@/src/contexts/user-context";
+import {
+  useProjects,
+  ProjectMemberResponse,
+} from "@/src/contexts/project-context";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
-const teamMembers = [
-  {
-    id: "1",
-    name: "Sahbaz",
-    email: "john@nexus.dev",
-    role: "Admin",
-    department: "Engineering",
-    avatar: "/avatars/01.png",
-    initials: "JD",
-    status: "online",
-    projects: 5,
-    tasks: 12,
-  },
-  {
-    id: "2",
-    name: "Sarah Chen",
-    email: "sarah@nexus.dev",
-    role: "Designer",
-    department: "Design",
-    avatar: "/avatars/02.png",
-    initials: "SC",
-    status: "online",
-    projects: 3,
-    tasks: 8,
-  },
-  {
-    id: "3",
-    name: "Mike Johnson",
-    email: "mike@nexus.dev",
-    role: "Developer",
-    department: "Engineering",
-    avatar: "/avatars/03.png",
-    initials: "MJ",
-    status: "away",
-    projects: 4,
-    tasks: 15,
-  },
-  {
-    id: "4",
-    name: "Emily Davis",
-    email: "emily@nexus.dev",
-    role: "Developer",
-    department: "Engineering",
-    avatar: "/avatars/04.png",
-    initials: "ED",
-    status: "online",
-    projects: 3,
-    tasks: 10,
-  },
-  {
-    id: "5",
-    name: "David Kim",
-    email: "david@nexus.dev",
-    role: "DevOps",
-    department: "Engineering",
-    avatar: "/avatars/05.png",
-    initials: "DK",
-    status: "offline",
-    projects: 2,
-    tasks: 6,
-  },
-  {
-    id: "6",
-    name: "Lisa Wang",
-    email: "lisa@nexus.dev",
-    role: "Product Manager",
-    department: "Product",
-    avatar: "/avatars/06.png",
-    initials: "LW",
-    status: "online",
-    projects: 6,
-    tasks: 4,
-  },
-  {
-    id: "7",
-    name: "Tom Wilson",
-    email: "tom@nexus.dev",
-    role: "Marketing",
-    department: "Marketing",
-    avatar: "/avatars/07.png",
-    initials: "TW",
-    status: "away",
-    projects: 2,
-    tasks: 5,
-  },
-  {
-    id: "8",
-    name: "Anna Martinez",
-    email: "anna@nexus.dev",
-    role: "QA Engineer",
-    department: "Engineering",
-    avatar: "/avatars/08.png",
-    initials: "AM",
-    status: "online",
-    projects: 4,
-    tasks: 9,
-  },
-];
+import { useState, useEffect } from "react";
+import { getTasksCountByUser } from "@/src/services/task.service";
+import { getProjectsCountByUser } from "@/src/services/project.service";
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -133,29 +46,108 @@ function getStatusColor(status: string) {
 
 function getRoleBadgeVariant(role: string) {
   switch (role) {
-    case "Admin":
+    case "admin":
       return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
-    case "Designer":
+    case "owner":
       return "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400";
-    case "Developer":
+    case "member":
       return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-    case "DevOps":
-      return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400";
-    case "Product Manager":
-      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-    case "Marketing":
-      return "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400";
-    case "QA Engineer":
-      return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+
     default:
       return "bg-secondary text-secondary-foreground";
   }
 }
 
 export default function TeamPage() {
-  const [isInviteModalOpen, setIsInviteModalOpen] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const { isAdmin } = useUser();
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { getProjectById, projects, fetchProjects } = useProjects();
+  const [projectMembers, setProjectMembers] = useState<ProjectMemberResponse[]>(
+    [],
+  );
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [memberStats, setMemberStats] = useState<Record<string, { tasks: number; projects: number }>>({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        await fetchProjects();
+      } catch (error) {
+        console.error("Failed to fetch projects:", error);
+      }
+    };
+    fetchData();
+  }, [fetchProjects]);
+
+  useEffect(() => {
+    const fetchProjectMembers = async () => {
+      if (!projects.length) return;
+      
+      let projectId = localStorage.getItem("currentProjectId");
+      
+      if (!projectId && projects.length > 0) {
+        projectId = projects[0]._id;
+      }
+
+      if (projectId) {
+        try {
+          const project = await getProjectById(projectId);
+          if (project) {
+            setProjectMembers(project.members || []);
+            setCurrentUserRole(project.role || null);
+          }
+        } catch (error) {
+          console.error("Failed to fetch project:", error);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    fetchProjectMembers();
+  }, [projects]);
+
+  useEffect(() => {
+    const fetchMemberStats = async () => {
+      const stats: Record<string, { tasks: number; projects: number }> = {};
+      
+      for (const member of projectMembers) {
+        const userId = member.user._id;
+        try {
+          const [taskCount, projectCount] = await Promise.all([
+            getTasksCountByUser(userId),
+            getProjectsCountByUser(userId),
+          ]);
+          stats[userId] = { tasks: taskCount, projects: projectCount };
+        } catch (error) {
+          stats[userId] = { tasks: 0, projects: 0 };
+        }
+      }
+      setMemberStats(stats);
+    };
+
+    if (projectMembers.length > 0) {
+      fetchMemberStats();
+    }
+  }, [projectMembers]);
+
+  const teamMembers = projectMembers.map((member) => ({
+    id: member.user._id,
+    name: member.user.name,
+    email: member.user.email || "",
+    role: member.role || "Member",
+    department: "Engineering",
+    avatar: "/avatars/01.png",
+    initials: member.user.name
+      .split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase(),
+    status: "online",
+    projects: memberStats[member.user._id]?.projects || 0,
+    tasks: memberStats[member.user._id]?.tasks || 0,
+  }));
 
   const filteredMembers = teamMembers.filter(
     (member) =>
@@ -166,9 +158,15 @@ export default function TeamPage() {
 
   return (
     <DashboardLayout title="Team">
-      <div className="space-y-6">
-        {/* Admin Notice for Members */}
-        {!isAdmin && (
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading team...</p>
+        </div>
+      ) : (
+        <>
+          <div className="space-y-6">
+            {/* Admin Notice for Members */}
+            {currentUserRole !== "owner" && currentUserRole !== "admin" && (
           <Alert>
             <Lock className="h-4 w-4" />
             <AlertTitle>Limited Access</AlertTitle>
@@ -190,7 +188,7 @@ export default function TeamPage() {
               className="pl-9"
             />
           </div>
-          {isAdmin && (
+          {(currentUserRole === "owner" || currentUserRole === "admin") && (
             <Button onClick={() => setIsInviteModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Invite Member
@@ -256,14 +254,11 @@ export default function TeamPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem>View profile</DropdownMenuItem>
                       <DropdownMenuItem>Send message</DropdownMenuItem>
-                      {isAdmin && (
+                      {(currentUserRole === "owner" ||
+                        currentUserRole === "admin") && (
                         <>
                           <DropdownMenuItem>Assign to project</DropdownMenuItem>
                           <DropdownMenuItem>Change role</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
-                            Remove from team
-                          </DropdownMenuItem>
                         </>
                       )}
                     </DropdownMenuContent>
@@ -328,6 +323,8 @@ export default function TeamPage() {
         open={isInviteModalOpen}
         onOpenChange={setIsInviteModalOpen}
       />
+        </>
+      )}
     </DashboardLayout>
   );
 }
