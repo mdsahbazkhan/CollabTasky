@@ -32,10 +32,7 @@ import { getProjectByIdAPI } from "@/src/services/project.service";
 import { getTasksByProject } from "@/src/services/task.service";
 import AddMemberModal from "@/components/projects/AddMemberModal";
 import { getAllUsers } from "@/src/services/auth.service";
-
-const project = null;
-
-const tasks: any[] = [];
+import { EditProjectModal } from "@/components/projects/edit-project-modal";
 
 export default function ProjectDetailsPage() {
   const params = useParams();
@@ -50,6 +47,7 @@ export default function ProjectDetailsPage() {
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] =
     React.useState(false);
   const [users, setUsers] = React.useState([]);
+  const [editModalOpen, setEditModalOpen] = React.useState(false);
   const fetchProject = async () => {
     try {
       const projectData = await getProjectByIdAPI(projectId);
@@ -62,6 +60,7 @@ export default function ProjectDetailsPage() {
       console.error(error);
     }
   };
+
   React.useEffect(() => {
     const fetchData = async () => {
       try {
@@ -289,7 +288,11 @@ export default function ProjectDetailsPage() {
           </div>
           <div className="flex items-center gap-2">
             {(project.role === "owner" || project.role === "admin") && (
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditModalOpen(true)}
+              >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </Button>
@@ -538,6 +541,15 @@ export default function ProjectDetailsPage() {
           projectId={projectId}
           users={users}
           refreshProject={fetchProject}
+        />
+        <EditProjectModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          project={project}
+          onSuccess={() => {
+            // Optionally trigger a refresh here
+            window.location.reload();
+          }}
         />
       </div>
     </DashboardLayout>

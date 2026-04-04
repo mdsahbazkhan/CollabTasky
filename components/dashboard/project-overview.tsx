@@ -110,14 +110,17 @@ export function ProjectOverview({ projects }: { projects: any[] }) {
                         View details
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setSelectedProject(project);
-                        setEditModalOpen(true);
-                      }}
-                    >
-                      Edit project
-                    </DropdownMenuItem>
+                    {(project.role === "owner" || project.role === "admin") && (
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedProject(project);
+                          setEditModalOpen(true);
+                        }}
+                      >
+                        Edit project
+                      </DropdownMenuItem>
+                    )}
+
                     <DropdownMenuItem>Archive</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
