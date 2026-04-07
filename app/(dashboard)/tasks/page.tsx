@@ -111,7 +111,7 @@ export default function TasksPage() {
 
       setTasks(formatted);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

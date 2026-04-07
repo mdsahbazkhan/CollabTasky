@@ -6,14 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Plus,
-  Search,
-  Mail,
-  MoreHorizontal,
-  Shield,
-  Lock,
-} from "lucide-react";
+import { Plus, Search, Mail, MoreHorizontal, Shield, Lock } from "lucide-react";
 import { InviteMemberModal } from "@/components/team/invite-member-modal";
 import {
   DropdownMenu,
@@ -30,6 +23,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useState, useEffect } from "react";
 import { getTasksCountByUser } from "@/src/services/task.service";
 import { getProjectsCountByUser } from "@/src/services/project.service";
+import AddMemberModal from "@/components/projects/AddMemberModal";
+import { getAllUsers } from "@/src/services/auth.service";
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -65,28 +60,34 @@ export default function TeamPage() {
   const [projectMembers, setProjectMembers] = useState<ProjectMemberResponse[]>(
     [],
   );
+  const [users, setUsers] = useState([]);
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [memberStats, setMemberStats] = useState<Record<string, { tasks: number; projects: number }>>({});
+  const [memberStats, setMemberStats] = useState<
+    Record<string, { tasks: number; projects: number }>
+  >({});
 
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      await fetchProjects();
+    } catch (error) {
+      console.error("Failed to fetch projects:", error);
+    }
+  };
+  const fetchUsers = async () => {
+    const res = await getAllUsers();
+    setUsers(res);
+  };
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        await fetchProjects();
-      } catch (error) {
-        console.error("Failed to fetch projects:", error);
-      }
-    };
     fetchData();
+    fetchUsers();
   }, [fetchProjects]);
-
+  let projectId = localStorage.getItem("currentProjectId");
   useEffect(() => {
     const fetchProjectMembers = async () => {
       if (!projects.length) return;
-      
-      let projectId = localStorage.getItem("currentProjectId");
-      
+
       if (!projectId && projects.length > 0) {
         projectId = projects[0]._id;
       }
@@ -111,7 +112,7 @@ export default function TeamPage() {
   useEffect(() => {
     const fetchMemberStats = async () => {
       const stats: Record<string, { tasks: number; projects: number }> = {};
-      
+
       for (const member of projectMembers) {
         const userId = member.user._id;
         try {
@@ -167,160 +168,176 @@ export default function TeamPage() {
           <div className="space-y-6">
             {/* Admin Notice for Members */}
             {currentUserRole !== "owner" && currentUserRole !== "admin" && (
-          <Alert>
-            <Lock className="h-4 w-4" />
-            <AlertTitle>Limited Access</AlertTitle>
-            <AlertDescription>
-              You are viewing the team as a member. Some management features are
-              only available to admins.
-            </AlertDescription>
-          </Alert>
-        )}
+              <Alert>
+                <Lock className="h-4 w-4" />
+                <AlertTitle>Limited Access</AlertTitle>
+                <AlertDescription>
+                  You are viewing the team as a member. Some management features
+                  are only available to admins.
+                </AlertDescription>
+              </Alert>
+            )}
 
-        {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search team members..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          {(currentUserRole === "owner" || currentUserRole === "admin") && (
-            <Button onClick={() => setIsInviteModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Invite Member
-            </Button>
-          )}
-        </div>
+            {/* Header */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search team members..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              {(currentUserRole === "owner" || currentUserRole === "admin") && (
+                <Button onClick={() => setIsInviteModalOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Invite Member
+                </Button>
+              )}
+            </div>
 
-        {/* Team Stats */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-2xl font-bold text-foreground">
-                {teamMembers.length}
-              </p>
-              <p className="text-sm text-muted-foreground">Total Members</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-2xl font-bold text-foreground">
-                {teamMembers.filter((m) => m.status === "online").length}
-              </p>
-              <p className="text-sm text-muted-foreground">Online Now</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-2xl font-bold text-foreground">4</p>
-              <p className="text-sm text-muted-foreground">Departments</p>
-            </CardContent>
-          </Card>
-        </div>
+            {/* Team Stats */}
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-2xl font-bold text-foreground">
+                    {teamMembers.length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Total Members</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-2xl font-bold text-foreground">
+                    {teamMembers.filter((m) => m.status === "online").length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Online Now</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-2xl font-bold text-foreground">4</p>
+                  <p className="text-sm text-muted-foreground">Departments</p>
+                </CardContent>
+              </Card>
+            </div>
 
-        {/* Team Members Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredMembers.map((member) => (
-            <Card
-              key={member.id}
-              className="overflow-hidden transition-colors hover:bg-muted/50"
-            >
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="relative">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={member.avatar} alt={member.name} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-                        {member.initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span
-                      className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-card ${getStatusColor(
-                        member.status,
-                      )}`}
-                    />
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Open menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View profile</DropdownMenuItem>
-                      <DropdownMenuItem>Send message</DropdownMenuItem>
-                      {currentUserRole === "owner" && (
-                        <>
-                          <DropdownMenuItem>Assign to project</DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <div className="mt-4 space-y-2">
-                  <div>
-                    <h3 className="font-semibold text-foreground">
-                      {member.name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {member.department}
-                    </p>
-                  </div>
-
-                  <Badge
-                    variant="secondary"
-                    className={getRoleBadgeVariant(member.role)}
-                  >
-                    {member.role}
-                  </Badge>
-
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="h-4 w-4" />
-                    <span className="truncate">{member.email}</span>
-                  </div>
-
-                  <div className="flex items-center gap-4 pt-2 text-sm">
-                    <div>
-                      <span className="font-medium text-foreground">
-                        {member.projects}
-                      </span>
-                      <span className="text-muted-foreground"> projects</span>
+            {/* Team Members Grid */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredMembers.map((member) => (
+                <Card
+                  key={member.id}
+                  className="overflow-hidden transition-colors hover:bg-muted/50"
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="relative">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={member.avatar} alt={member.name} />
+                          <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+                            {member.initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span
+                          className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-card ${getStatusColor(
+                            member.status,
+                          )}`}
+                        />
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>View profile</DropdownMenuItem>
+                          <DropdownMenuItem>Send message</DropdownMenuItem>
+                          {currentUserRole === "owner" && (
+                            <>
+                              <DropdownMenuItem>
+                                Assign to project
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                    <div>
-                      <span className="font-medium text-foreground">
-                        {member.tasks}
-                      </span>
-                      <span className="text-muted-foreground"> tasks</span>
+
+                    <div className="mt-4 space-y-2">
+                      <div>
+                        <h3 className="font-semibold text-foreground">
+                          {member.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {member.department}
+                        </p>
+                      </div>
+
+                      <Badge
+                        variant="secondary"
+                        className={getRoleBadgeVariant(member.role)}
+                      >
+                        {member.role}
+                      </Badge>
+
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Mail className="h-4 w-4" />
+                        <span className="truncate">{member.email}</span>
+                      </div>
+
+                      <div className="flex items-center gap-4 pt-2 text-sm">
+                        <div>
+                          <span className="font-medium text-foreground">
+                            {member.projects}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {" "}
+                            projects
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-foreground">
+                            {member.tasks}
+                          </span>
+                          <span className="text-muted-foreground"> tasks</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
 
-        {filteredMembers.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-lg font-medium text-foreground">
-              No team members found
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Try adjusting your search or invite new members
-            </p>
+            {filteredMembers.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-lg font-medium text-foreground">
+                  No team members found
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Try adjusting your search or invite new members
+                </p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      <InviteMemberModal
+          {/* <InviteMemberModal
         open={isInviteModalOpen}
         onOpenChange={setIsInviteModalOpen}
-      />
+      /> */}
+          <AddMemberModal
+            open={isInviteModalOpen}
+            onOpenChange={setIsInviteModalOpen}
+            projectId={projectId}
+            users={users}
+            refreshProject={fetchData}
+          />
         </>
       )}
     </DashboardLayout>
