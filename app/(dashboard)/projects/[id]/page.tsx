@@ -29,11 +29,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CreateTaskModal } from "@/components/tasks/create-task-modal";
-import { getProjectByIdAPI, removeMember } from "@/src/services/project.service";
+import {
+  getProjectByIdAPI,
+  removeMember,
+  changeMemberRole,
+} from "@/src/services/project.service";
 import { getTasksByProject } from "@/src/services/task.service";
 import AddMemberModal from "@/components/projects/AddMemberModal";
 import { getAllUsers } from "@/src/services/auth.service";
 import { EditProjectModal } from "@/components/projects/edit-project-modal";
+import { ChangeRoleModal } from "@/components/projects/change-role-modal";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -61,8 +66,17 @@ export default function ProjectDetailsPage() {
   const [users, setUsers] = React.useState([]);
   const [editModalOpen, setEditModalOpen] = React.useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [memberToDelete, setMemberToDelete] = React.useState<{_id: string; name: string} | null>(null);
+  const [memberToDelete, setMemberToDelete] = React.useState<{
+    _id: string;
+    name: string;
+  } | null>(null);
   const [isRemoving, setIsRemoving] = React.useState<string | null>(null);
+  const [changeRoleModalOpen, setChangeRoleModalOpen] = React.useState(false);
+  const [memberToChangeRole, setMemberToChangeRole] = React.useState<{
+    _id: string;
+    name: string;
+    role: string;
+  } | null>(null);
   const fetchProject = async () => {
     try {
       const projectData = await getProjectByIdAPI(projectId);
@@ -144,20 +158,31 @@ export default function ProjectDetailsPage() {
 
   const confirmRemoveMember = async () => {
     if (!memberToDelete) return;
-    
+
     setIsRemoving(memberToDelete._id);
     setDeleteDialogOpen(false);
     try {
       await removeMember(projectId, memberToDelete._id);
       await fetchProject();
       setMemberToDelete(null);
-      toast.success(`${memberToDelete.name} has been removed from this project.`);
+      toast.success(
+        `${memberToDelete.name} has been removed from this project.`,
+      );
     } catch (error) {
       console.error("Failed to remove member:", error);
       toast.error("Failed to remove member. Please try again.");
     } finally {
       setIsRemoving(null);
     }
+  };
+
+  const handleChangeRole = (member: {
+    _id: string;
+    name: string;
+    role: string;
+  }) => {
+    setMemberToChangeRole(member);
+    setChangeRoleModalOpen(true);
   };
 
   if (loading) {
@@ -518,21 +543,43 @@ export default function ProjectDetailsPage() {
                         {member.initials}
                       </AvatarFallback>
                     </Avatar>
-                    {(project.role === "owner" || project.role === "admin") && (
+                    {project.role === "owner" && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 h-8 w-8"
+                          >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleChangeRole({
+                                _id: member._id,
+                                name: member.name,
+                                role: member.role,
+                              })
+                            }
+                          >
+                            Change Role
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
                             className="text-destructive"
-                            onClick={() => handleDeleteMember({ _id: member._id, name: member.name })}
+                            onClick={() =>
+                              handleDeleteMember({
+                                _id: member._id,
+                                name: member.name,
+                              })
+                            }
                             disabled={isRemoving === member._id}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            {isRemoving === member._id ? "Removing..." : "Remove from project"}
+                            {isRemoving === member._id
+                              ? "Removing..."
+                              : "Remove from project"}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -612,7 +659,8 @@ export default function ProjectDetailsPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Remove Member</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to remove {memberToDelete?.name} from this project? Their tasks will be unassigned.
+                Are you sure you want to remove {memberToDelete?.name} from this
+                project? Their tasks will be unassigned.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -626,6 +674,15 @@ export default function ProjectDetailsPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        <ChangeRoleModal
+          open={changeRoleModalOpen}
+          onOpenChange={setChangeRoleModalOpen}
+          memberId={memberToChangeRole?._id || ""}
+          memberName={memberToChangeRole?.name || ""}
+          currentRole={memberToChangeRole?.role || ""}
+          projectId={projectId}
+          onRoleChanged={fetchProject}
+        />
       </div>
     </DashboardLayout>
   );

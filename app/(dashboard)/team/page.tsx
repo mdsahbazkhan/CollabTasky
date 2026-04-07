@@ -254,11 +254,9 @@ export default function TeamPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem>View profile</DropdownMenuItem>
                       <DropdownMenuItem>Send message</DropdownMenuItem>
-                      {(currentUserRole === "owner" ||
-                        currentUserRole === "admin") && (
+                      {currentUserRole === "owner" && (
                         <>
                           <DropdownMenuItem>Assign to project</DropdownMenuItem>
-                          <DropdownMenuItem>Change role</DropdownMenuItem>
                         </>
                       )}
                     </DropdownMenuContent>

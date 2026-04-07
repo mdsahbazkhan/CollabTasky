@@ -49,3 +49,15 @@ export const deleteProject = async (projectId: string) => {
   const res = await API.delete(`/projects/${projectId}`);
   return res.data;
 };
+
+export const changeMemberRole = async (
+  projectId: string,
+  memberId: string,
+  role: string,
+) => {
+  const res = await API.patch(
+    `/projects/${projectId}/members/${memberId}/role`,
+    { role },
+  );
+  return res.data;
+};

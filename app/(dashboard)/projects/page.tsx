@@ -196,6 +196,7 @@ export default function ProjectsPage() {
       <CreateProjectModal
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
+        onSuccess={fetchProjects}
       />
     </DashboardLayout>
   );
