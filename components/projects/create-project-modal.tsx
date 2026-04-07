@@ -36,11 +36,13 @@ const colors = [
 interface CreateProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 export function CreateProjectModal({
   open,
   onOpenChange,
+  onSuccess,
 }: CreateProjectModalProps) {
   const [selectedColor, setSelectedColor] = React.useState(colors[0].value);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -48,6 +50,7 @@ export function CreateProjectModal({
     name: "",
     description: "",
     status: "active",
+    startDate: "",
     dueDate: "",
     color: colors[0].value,
   });
@@ -62,7 +65,7 @@ export function CreateProjectModal({
         name: formData.name,
         description: formData.description,
         status: formData.status,
-        startDate: formData.dueDate,
+        startDate: formData.startDate,
         endDate: formData.dueDate,
         color: formData.color,
       });
@@ -72,10 +75,15 @@ export function CreateProjectModal({
         name: "",
         description: "",
         status: "active",
+        startDate: "",
         dueDate: "",
         color: colors[0].value,
       });
+
       onOpenChange(false);
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.log(error);
       toast.error("Failed to create project");
@@ -144,15 +152,27 @@ export function CreateProjectModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="dueDate">Due Date</Label>
+            <Label htmlFor="startDate">Start Date</Label>
             <Input
-              id="dueDate"
+              id="startDate"
               type="date"
-              value={formData.dueDate}
+              value={formData.startDate}
               onChange={(e) =>
-                setFormData({ ...formData, dueDate: e.target.value })
+                setFormData({ ...formData, startDate: e.target.value })
               }
             />
+
+            <div className="space-y-2">
+              <Label htmlFor="dueDate">Due Date</Label>
+              <Input
+                id="dueDate"
+                type="date"
+                value={formData.dueDate}
+                onChange={(e) =>
+                  setFormData({ ...formData, dueDate: e.target.value })
+                }
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
