@@ -117,7 +117,15 @@ export default function TasksPage() {
   const fetchProjects = async () => {
     try {
       const data = await getProjects();
-      setProjects(data);
+      const formatted = data.map((project: any) => ({
+        _id: project._id,
+        name: project.name,
+        members: project.members.map((m: any) => ({
+          _id: m.user._id,
+          name: m.user.name,
+        })),
+      }));
+      setProjects(formatted);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -141,7 +149,6 @@ export default function TasksPage() {
   }, [projects]);
   React.useEffect(() => {
     socket.on("taskUpdated", (updatedTask) => {
-      console.log("🔥 REALTIME EVENT:", updatedTask);
       setTasks((prevTasks) => {
         const exists = prevTasks.some((task) => task.id === updatedTask._id);
 
