@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { socket } from "@/src/lib/socket";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +15,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -126,6 +125,40 @@ export default function TasksPage() {
   React.useEffect(() => {
     fetchTasks();
     fetchProjects();
+  }, []);
+  React.useEffect(() => {
+    socket.connect(); // 👈 FORCE CONNECT
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+  React.useEffect(() => {
+    if (projects.length > 0) {
+      projects.forEach((project) => {
+        socket.emit("joinProject", project._id);
+      });
+    }
+  }, [projects]);
+  React.useEffect(() => {
+    socket.on("taskUpdated", (updatedTask) => {
+      console.log("🔥 REALTIME EVENT:", updatedTask);
+      setTasks((prevTasks) => {
+        const exists = prevTasks.some((task) => task.id === updatedTask._id);
+
+        if (exists) {
+          return prevTasks.map((task) =>
+            task.id === updatedTask._id
+              ? { ...task, status: updatedTask.status }
+              : task,
+          );
+        } else {
+          return [...prevTasks, updatedTask]; // optional
+        }
+      });
+    });
+    return () => {
+      socket.off("taskUpdated");
+    };
   }, []);
 
   return (

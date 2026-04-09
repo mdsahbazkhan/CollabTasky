@@ -117,8 +117,6 @@ export function TaskDetailsPanel({
   open,
   onOpenChange,
   projects = [],
-  onUpdate,
-  onDelete,
   onSuccess,
 }: TaskDetailsPanelProps) {
   const [comment, setComment] = React.useState("");
