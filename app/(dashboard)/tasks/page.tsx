@@ -143,7 +143,7 @@ export default function TasksPage() {
   React.useEffect(() => {
     if (projects.length > 0) {
       projects.forEach((project) => {
-        socket.emit("joinProject", project._id);
+        socket.emit("joinRoom", project._id);
       });
     }
   }, [projects]);

@@ -66,7 +66,6 @@ export function CreateTaskModal({
       } else {
         setSelectedProjectId("");
       }
-      console.log("DEBUG useEffect:", { open, projectId });
     }
   }, [open, projectId]);
 
@@ -76,13 +75,6 @@ export function CreateTaskModal({
   const projectMembers = selectedProjectId
     ? projectList.find((p) => p._id === selectedProjectId)?.members || availableMembers
     : [];
-
-  console.log("DEBUG CreateTaskModal:", {
-    projectId,
-    selectedProjectId,
-    availableMembers,
-    projectMembers: projectMembers.map(m => m.name),
-  });
 
   const resetForm = () => {
     setTitle("");
