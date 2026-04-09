@@ -49,14 +49,13 @@ const navigation: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Projects", href: "/projects", icon: FolderKanban },
   { name: "Tasks", href: "/tasks", icon: CheckSquare },
-  { name: "Team", href: "/team", icon: Users},
+  { name: "Team", href: "/team", icon: Users },
   { name: "Chat", href: "/chat", icon: MessageSquare },
   { name: "AI Assistant", href: "/ai", icon: Sparkles },
 ];
 
 const bottomNav: NavItem[] = [
-  { name: "Notifications", href: "/notifications", icon: Bell },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Notifications", href: "/notifications", icon: Bell }
 ];
 
 interface SidebarProps {
@@ -67,8 +66,6 @@ interface SidebarProps {
 export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { user, loading, switchRole, isAdmin } = useUser();
-
- 
 
   // Computed user properties with fallbacks
   const userInitials = user?.name
@@ -134,25 +131,9 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
           </Button>
         </div>
 
-        {/* Search */}
-        {!collapsed && (
-          <div className="p-3">
-            <Button
-              variant="outline"
-              className="w-full justify-start gap-2 border-sidebar-border bg-sidebar-accent/50 text-sidebar-foreground hover:bg-sidebar-accent"
-            >
-              <Search className="h-4 w-4" />
-              <span className="text-muted-foreground">Search...</span>
-              <kbd className="ml-auto rounded border border-sidebar-border bg-sidebar px-1.5 py-0.5 text-xs text-muted-foreground">
-                ⌘K
-              </kbd>
-            </Button>
-          </div>
-        )}
-
         {/* Quick Action */}
         {!collapsed && (
-          <div className="px-3 pb-2">
+          <div className="px-3 pb-2 py-2">
             <Button className="w-full gap-2">
               <Plus className="h-4 w-4" />
               New Project
@@ -249,7 +230,6 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                       <span className="text-sm font-medium text-sidebar-foreground">
                         {userName}
                       </span>
-                     
                     </div>
                   )}
                 </button>
@@ -264,8 +244,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-               
-              
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/settings">Settings</Link>
