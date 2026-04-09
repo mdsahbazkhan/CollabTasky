@@ -66,6 +66,7 @@ export default function TeamPage() {
   const [memberStats, setMemberStats] = useState<
     Record<string, { tasks: number; projects: number }>
   >({});
+  const [projectId, setProjectId] = useState<string | null>(null);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -83,18 +84,23 @@ export default function TeamPage() {
     fetchData();
     fetchUsers();
   }, [fetchProjects]);
-  let projectId = localStorage.getItem("currentProjectId");
+  useEffect(() => {
+    const id = localStorage.getItem("currentProjectId");
+    setProjectId(id);
+  }, []);
   useEffect(() => {
     const fetchProjectMembers = async () => {
       if (!projects.length) return;
 
-      if (!projectId && projects.length > 0) {
-        projectId = projects[0]._id;
+      let currentProjectId = projectId;
+
+      if (!currentProjectId && projects.length > 0) {
+        currentProjectId = projects[0]._id;
       }
 
-      if (projectId) {
+      if (currentProjectId) {
         try {
-          const project = await getProjectById(projectId);
+          const project = await getProjectById(currentProjectId);
           if (project) {
             setProjectMembers(project.members || []);
             setCurrentUserRole(project.role || null);
@@ -103,11 +109,12 @@ export default function TeamPage() {
           console.error("Failed to fetch project:", error);
         }
       }
+
       setIsLoading(false);
     };
 
     fetchProjectMembers();
-  }, [projects]);
+  }, [projects, projectId]);
 
   useEffect(() => {
     const fetchMemberStats = async () => {
