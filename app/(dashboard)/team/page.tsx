@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
+import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +29,6 @@ import { getProjectsCountByUser } from "@/src/services/project.service";
 import AddMemberModal from "@/components/projects/AddMemberModal";
 import { getAllUsers } from "@/src/services/auth.service";
 import { socket } from "@/src/lib/socket";
-import { useRouter } from "next/navigation";
 import { useUser } from "@/src/contexts/user-context";
 
 function getStatusColor(status: string) {

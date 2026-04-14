@@ -1,7 +1,10 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +68,14 @@ function formatTime(dateStr: string) {
 }
 
 export default function ChatPage() {
+  return (
+    <Suspense fallback={<DashboardLayout title="Chat"><div className="flex h-[calc(100vh-8rem)] items-center justify-center">Loading...</div></DashboardLayout>}>
+      <ChatContent />
+    </Suspense>
+  );
+}
+
+function ChatContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user: currentUser } = useUser();
@@ -82,7 +93,6 @@ export default function ChatPage() {
   const typingTimeout = React.useRef<any>(null);
   const [onlineUsers, setOnlineUsers] = React.useState<string[]>([]);
 
-  // Load projects (via context) and all users on mount
   React.useEffect(() => {
     if (projects.length === 0) fetchProjects();
     getAllUsers()
@@ -90,7 +100,6 @@ export default function ChatPage() {
       .catch((err) => console.error("Failed to load users:", err));
   }, []);
 
-  // Handle userId query parameter to open DM
   React.useEffect(() => {
     const userId = searchParams.get("userId");
     if (userId && allUsers.length > 0) {
@@ -100,9 +109,8 @@ export default function ChatPage() {
         router.replace("/chat");
       }
     }
-  }, [searchParams, allUsers]);
+  }, [searchParams, allUsers, router]);
 
-  // Socket setup
   React.useEffect(() => {
     socket.connect();
     const handleNewMessage = (msg: Message) => {
@@ -133,7 +141,6 @@ export default function ChatPage() {
     };
   }, []);
 
-  // Add user to online list and request online users after socket connects
   React.useEffect(() => {
     if (!currentUser?._id) return;
     
@@ -153,7 +160,6 @@ export default function ChatPage() {
     };
   }, [currentUser?._id]);
 
-  // Scroll to bottom on new messages
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -197,7 +203,7 @@ export default function ChatPage() {
       setLoading(false);
     }
   };
-  // ✅ Typing handler (optimized debounce)
+
   const handleTyping = (value: string) => {
     setInputMessage(value);
 
@@ -248,9 +254,7 @@ export default function ChatPage() {
   return (
     <DashboardLayout title="Chat">
       <div className="flex h-[calc(100vh-8rem)] overflow-hidden rounded-lg border border-border">
-        {/* Sidebar */}
         <div className="hidden w-64 flex-col border-r border-border bg-card md:flex">
-          {/* Header */}
           <div className="flex h-14 items-center justify-between border-b border-border px-4">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
@@ -263,7 +267,6 @@ export default function ChatPage() {
             </Button>
           </div>
 
-          {/* Search */}
           <div className="p-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -275,7 +278,6 @@ export default function ChatPage() {
           </div>
 
           <ScrollArea className="flex-1 px-2">
-            {/* My Projects */}
             <div className="py-2">
               <div className="px-2 py-1">
                 <span className="text-xs font-semibold uppercase text-muted-foreground">
@@ -308,7 +310,6 @@ export default function ChatPage() {
 
             <Separator className="my-2" />
 
-            {/* Direct Messages */}
             <div className="py-2">
               <div className="px-2 py-1">
                 <span className="text-xs font-semibold uppercase text-muted-foreground">
@@ -354,9 +355,7 @@ export default function ChatPage() {
           </ScrollArea>
         </div>
 
-        {/* Main Chat Area */}
         <div className="flex flex-1 flex-col">
-          {/* Chat Header */}
           <div className="flex h-14 items-center justify-between border-b border-border px-4">
             <div className="flex items-center gap-2">
               {selectedChat?.type === "project" ? (
@@ -381,7 +380,6 @@ export default function ChatPage() {
             </div>
           </div>
 
-          {/* Messages */}
           <ScrollArea className="flex-1 p-4">
             {!selectedChat ? (
               <div className="flex h-full items-center justify-center">
@@ -436,7 +434,6 @@ export default function ChatPage() {
               </p>
             </div>
           )}
-          {/* Message Input */}
           <div className="border-t border-border p-4">
             <div className="flex items-center gap-2">
               <Button
