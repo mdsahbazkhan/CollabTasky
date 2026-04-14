@@ -25,6 +25,9 @@ import { getTasksCountByUser } from "@/src/services/task.service";
 import { getProjectsCountByUser } from "@/src/services/project.service";
 import AddMemberModal from "@/components/projects/AddMemberModal";
 import { getAllUsers } from "@/src/services/auth.service";
+import { socket } from "@/src/lib/socket";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/src/contexts/user-context";
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -54,6 +57,8 @@ function getRoleBadgeVariant(role: string) {
 }
 
 export default function TeamPage() {
+  const router = useRouter();
+  const { user: currentUser } = useUser();
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { getProjectById, projects, fetchProjects } = useProjects();
@@ -67,6 +72,7 @@ export default function TeamPage() {
     Record<string, { tasks: number; projects: number }>
   >({});
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -140,6 +146,29 @@ export default function TeamPage() {
     }
   }, [projectMembers]);
 
+  useEffect(() => {
+    socket.connect();
+    
+    const handleOnlineUsers = (users: string[]) => {
+      setOnlineUsers(users);
+    };
+    
+    socket.on("onlineUsers", handleOnlineUsers);
+    
+    if (currentUser?._id) {
+      socket.emit("addUser", currentUser._id);
+    }
+    
+    return () => {
+      socket.off("onlineUsers", handleOnlineUsers);
+      socket.disconnect();
+    };
+  }, [currentUser?._id]);
+
+  const handleSendMessage = (userId: string) => {
+    router.push(`/chat?userId=${userId}`);
+  };
+
   const teamMembers = projectMembers.map((member) => ({
     id: member.user._id,
     name: member.user.name,
@@ -152,7 +181,7 @@ export default function TeamPage() {
       .map((n: string) => n[0])
       .join("")
       .toUpperCase(),
-    status: "online",
+    status: onlineUsers.includes(member.user._id.toString()) ? "online" : "offline",
     projects: memberStats[member.user._id]?.projects || 0,
     tasks: memberStats[member.user._id]?.tasks || 0,
   }));
@@ -265,7 +294,9 @@ export default function TeamPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem>View profile</DropdownMenuItem>
-                          <DropdownMenuItem>Send message</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSendMessage(member.id)}>
+                            Send message
+                          </DropdownMenuItem>
                           {currentUserRole === "owner" && (
                             <>
                               <DropdownMenuItem>

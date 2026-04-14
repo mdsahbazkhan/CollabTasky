@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +65,8 @@ function formatTime(dateStr: string) {
 }
 
 export default function ChatPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user: currentUser } = useUser();
   const { projects, fetchProjects } = useProjects();
   const [allUsers, setAllUsers] = React.useState<ChatUser[]>([]);
@@ -77,6 +80,7 @@ export default function ChatPage() {
   const [typingUser, setTypingUser] = React.useState("");
   const [isTyping, setIsTyping] = React.useState(false);
   const typingTimeout = React.useRef<any>(null);
+  const [onlineUsers, setOnlineUsers] = React.useState<string[]>([]);
 
   // Load projects (via context) and all users on mount
   React.useEffect(() => {
@@ -85,6 +89,18 @@ export default function ChatPage() {
       .then((data) => setAllUsers(data || []))
       .catch((err) => console.error("Failed to load users:", err));
   }, []);
+
+  // Handle userId query parameter to open DM
+  React.useEffect(() => {
+    const userId = searchParams.get("userId");
+    if (userId && allUsers.length > 0) {
+      const user = allUsers.find((u) => u._id === userId);
+      if (user) {
+        selectDM(user);
+        router.replace("/chat");
+      }
+    }
+  }, [searchParams, allUsers]);
 
   // Socket setup
   React.useEffect(() => {
@@ -101,17 +117,41 @@ export default function ChatPage() {
     const handleStopTyping = () => {
       setTypingUser("");
     };
+    const handleOnlineUsers = (users: string[]) => {
+      setOnlineUsers(users);
+    };
     socket.on("newMessage", handleNewMessage);
     socket.on("typing", handleTyping);
     socket.on("stopTyping", handleStopTyping);
+    socket.on("onlineUsers", handleOnlineUsers);
 
     return () => {
       socket.off("newMessage", handleNewMessage);
       socket.off("typing", handleTyping);
       socket.off("stopTyping", handleStopTyping);
-      socket.disconnect();
+      socket.off("onlineUsers", handleOnlineUsers);
     };
   }, []);
+
+  // Add user to online list and request online users after socket connects
+  React.useEffect(() => {
+    if (!currentUser?._id) return;
+    
+    const handleConnect = () => {
+      socket.emit("addUser", currentUser._id);
+      socket.emit("getOnlineUsers");
+    };
+    
+    if (socket.connected) {
+      handleConnect();
+    }
+    
+    socket.on("connect", handleConnect);
+    
+    return () => {
+      socket.off("connect", handleConnect);
+    };
+  }, [currentUser?._id]);
 
   // Scroll to bottom on new messages
   React.useEffect(() => {
@@ -295,12 +335,17 @@ export default function ChatPage() {
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                     >
-                      <Avatar className="h-6 w-6 shrink-0">
-                        <AvatarImage src={u.avatar} alt={u.name} />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                          {getInitials(u.name)}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative shrink-0">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={u.avatar} alt={u.name} />
+                          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                            {getInitials(u.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        {onlineUsers.includes(u._id.toString()) && (
+                          <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card bg-green-500" />
+                        )}
+                      </div>
                       <span className="truncate">{u.name}</span>
                     </button>
                   ))
