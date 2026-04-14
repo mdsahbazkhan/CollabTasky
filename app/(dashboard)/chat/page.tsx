@@ -68,12 +68,15 @@ export default function ChatPage() {
   const { projects, fetchProjects } = useProjects();
   const [allUsers, setAllUsers] = React.useState<ChatUser[]>([]);
   const [selectedChat, setSelectedChat] = React.useState<SelectedChat | null>(
-    null
+    null,
   );
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [inputMessage, setInputMessage] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const [typingUser, setTypingUser] = React.useState("");
+  const [isTyping, setIsTyping] = React.useState(false);
+  const typingTimeout = React.useRef<any>(null);
 
   // Load projects (via context) and all users on mount
   React.useEffect(() => {
@@ -86,11 +89,26 @@ export default function ChatPage() {
   // Socket setup
   React.useEffect(() => {
     socket.connect();
-    socket.on("newMessage", (msg: Message) => {
+    const handleNewMessage = (msg: Message) => {
       setMessages((prev) => [...prev, msg]);
-    });
+    };
+    const handleTyping = ({ user }: { user: string }) => {
+      if (user !== currentUser?.name) {
+        setTypingUser(user);
+      }
+    };
+
+    const handleStopTyping = () => {
+      setTypingUser("");
+    };
+    socket.on("newMessage", handleNewMessage);
+    socket.on("typing", handleTyping);
+    socket.on("stopTyping", handleStopTyping);
+
     return () => {
-      socket.off("newMessage");
+      socket.off("newMessage", handleNewMessage);
+      socket.off("typing", handleTyping);
+      socket.off("stopTyping", handleStopTyping);
       socket.disconnect();
     };
   }, []);
@@ -124,7 +142,11 @@ export default function ChatPage() {
     try {
       if (selectedChat) socket.emit("leaveRoom", getRoomId(selectedChat));
       const conversation = await createConversation(user._id);
-      setSelectedChat({ type: "dm", data: user, conversationId: conversation._id });
+      setSelectedChat({
+        type: "dm",
+        data: user,
+        conversationId: conversation._id,
+      });
       const msgs = await getConversationMessages(conversation._id);
       setMessages(msgs || []);
       socket.emit("joinRoom", conversation._id);
@@ -134,6 +156,26 @@ export default function ChatPage() {
     } finally {
       setLoading(false);
     }
+  };
+  // ✅ Typing handler (optimized debounce)
+  const handleTyping = (value: string) => {
+    setInputMessage(value);
+
+    if (!selectedChat || !currentUser) return;
+
+    const roomId = getRoomId(selectedChat);
+
+    if (!isTyping) {
+      setIsTyping(true);
+      socket.emit("typing", { roomId, user: currentUser.name });
+    }
+
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
+
+    typingTimeout.current = setTimeout(() => {
+      socket.emit("stopTyping", { roomId, user: currentUser.name });
+      setIsTyping(false);
+    }, 1000);
   };
 
   const sendMessage = () => {
@@ -214,7 +256,7 @@ export default function ChatPage() {
                       selectedChat?.type === "project" &&
                         selectedChat.data._id === project._id
                         ? "bg-primary/10 text-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
                     )}
                   >
                     <FolderKanban className="h-4 w-4 shrink-0" />
@@ -233,32 +275,35 @@ export default function ChatPage() {
                   Direct Messages
                 </span>
               </div>
-              {allUsers.filter((u) => u._id !== currentUser?._id).length === 0 ? (
+              {allUsers.filter((u) => u._id !== currentUser?._id).length ===
+              0 ? (
                 <p className="px-2 py-1 text-xs text-muted-foreground">
                   No users found
                 </p>
               ) : (
-                allUsers.filter((u) => u._id !== currentUser?._id).map((u) => (
-                  <button
-                    key={u._id}
-                    onClick={() => selectDM(u)}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
-                      selectedChat?.type === "dm" &&
-                        selectedChat.data._id === u._id
-                        ? "bg-primary/10 text-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    )}
-                  >
-                    <Avatar className="h-6 w-6 shrink-0">
-                      <AvatarImage src={u.avatar} alt={u.name} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                        {getInitials(u.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="truncate">{u.name}</span>
-                  </button>
-                ))
+                allUsers
+                  .filter((u) => u._id !== currentUser?._id)
+                  .map((u) => (
+                    <button
+                      key={u._id}
+                      onClick={() => selectDM(u)}
+                      className={cn(
+                        "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
+                        selectedChat?.type === "dm" &&
+                          selectedChat.data._id === u._id
+                          ? "bg-primary/10 text-foreground"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      )}
+                    >
+                      <Avatar className="h-6 w-6 shrink-0">
+                        <AvatarImage src={u.avatar} alt={u.name} />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                          {getInitials(u.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="truncate">{u.name}</span>
+                    </button>
+                  ))
               )}
             </div>
           </ScrollArea>
@@ -339,7 +384,13 @@ export default function ChatPage() {
               </div>
             )}
           </ScrollArea>
-
+          {typingUser && (
+            <div className="px-4 pb-2">
+              <p className="text-sm text-gray-400 italic">
+                {typingUser} is typing...
+              </p>
+            </div>
+          )}
           {/* Message Input */}
           <div className="border-t border-border p-4">
             <div className="flex items-center gap-2">
@@ -361,7 +412,7 @@ export default function ChatPage() {
                       : "Select a chat first..."
                   }
                   value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
+                  onChange={(e) => handleTyping(e.target.value)}
                   onKeyDown={handleKeyDown}
                   disabled={!selectedChat}
                   className="pr-10"
