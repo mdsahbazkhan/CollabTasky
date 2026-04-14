@@ -169,7 +169,7 @@ function ChatContent() {
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, loading]);
 
   const getRoomId = (chat: SelectedChat) =>
     chat.type === "project" ? chat.data._id : chat.conversationId;
@@ -539,7 +539,7 @@ function ChatContent() {
                     </div>
                   </div>
                 ))}
-                <div ref={messagesEndRef} />
+                {/* <div ref={messagesEndRef} /> */}
               </div>
             )}
           </ScrollArea>

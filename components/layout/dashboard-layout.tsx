@@ -16,11 +16,13 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
 
   React.useEffect(() => {
     const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    }
     return () => {
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prev || "";
     };
-  }, []);
+  }, [mobileMenuOpen]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
