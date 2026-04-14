@@ -20,7 +20,7 @@ import {
 import { cn } from "@/src/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/src/contexts/user-context";
-import { useProjects } from "@/src/contexts/project-context";
+import { useProjects, Project } from "@/src/contexts/project-context";
 import { getAllUsers } from "@/src/services/auth.service";
 import {
   getProjectMessages,

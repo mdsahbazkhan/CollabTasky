@@ -33,7 +33,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         const data = await getMe();
         setUser(data);
         // Set initial role from user data if available
-        if (data.role === "admin") {
+        if (data?.role === "admin") {
           setRole("admin");
         }
       } catch (error) {

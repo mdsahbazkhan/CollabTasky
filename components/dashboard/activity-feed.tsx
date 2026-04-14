@@ -8,7 +8,7 @@ import { cn } from "@/src/lib/utils";
 const activities = [
   {
     id: 1,
-    user: { name: "Sarah Chen", avatar: "/avatars/02.png", initials: "SC" },
+    user: { name: "Sarah Chen",  initials: "SC" },
     action: "completed task",
     target: "Update landing page",
     time: "2 minutes ago",
@@ -16,7 +16,7 @@ const activities = [
   },
   {
     id: 2,
-    user: { name: "Mike Johnson", avatar: "/avatars/03.png", initials: "MJ" },
+    user: { name: "Mike Johnson",  initials: "MJ" },
     action: "commented on",
     target: "API Integration",
     time: "15 minutes ago",
@@ -24,7 +24,7 @@ const activities = [
   },
   {
     id: 3,
-    user: { name: "Emily Davis", avatar: "/avatars/04.png", initials: "ED" },
+    user: { name: "Emily Davis",  initials: "ED" },
     action: "created project",
     target: "Q2 Marketing",
     time: "1 hour ago",
@@ -32,7 +32,7 @@ const activities = [
   },
   {
     id: 4,
-    user: { name: "David Kim", avatar: "/avatars/05.png", initials: "DK" },
+    user: { name: "David Kim", initials: "DK" },
     action: "moved task to",
     target: "In Progress",
     time: "2 hours ago",
@@ -40,7 +40,7 @@ const activities = [
   },
   {
     id: 5,
-    user: { name: "Lisa Wang", avatar: "/avatars/06.png", initials: "LW" },
+    user: { name: "Lisa Wang",  initials: "LW" },
     action: "assigned you to",
     target: "Design Review",
     time: "3 hours ago",
@@ -48,7 +48,7 @@ const activities = [
   },
   {
     id: 6,
-    user: { name: "Sahbaz ", avatar: "/avatars/01.png", initials: "JD" },
+    user: { name: "Sahbaz ",  initials: "JD" },
     action: "uploaded file to",
     target: "Website Redesign",
     time: "5 hours ago",
@@ -93,7 +93,7 @@ export function ActivityFeed() {
                 <div className="relative">
                   <Avatar className="h-10 w-10">
                     <AvatarImage
-                      src={activity.user.avatar}
+                      // src={activity.user.avatar}
                       alt={activity.user.name}
                     />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xs">

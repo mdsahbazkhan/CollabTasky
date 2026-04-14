@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { RecentTasks } from "@/components/dashboard/recent-tasks";
@@ -22,14 +23,10 @@ import { getTasksByProject } from "@/src/services/task.service";
 
 export default function DashboardPage() {
   const { user, loading: userLoading, isAdmin } = useUser();
+  const router = useRouter();
   const [projects, setProjects] = useState<any[]>([]);
   const [activeTasks, setActiveTasks] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-
-  // Guard: don't render during SSG when user is not available
-  if (!user && !userLoading) {
-    return null;
-  }
 
   const userName = user?.name?.split(" ")[0] || "User";
 
@@ -65,6 +62,16 @@ export default function DashboardPage() {
       fetchTasks();
     }
   }, [projects]);
+  // Redirect to login if session expired or token missing
+  useEffect(() => {
+    if (!user && !userLoading) {
+      router.replace("/login");
+    }
+  }, [user, userLoading, router]);
+  if (userLoading || !user) {
+    return null;
+  }
+
   return (
     <DashboardLayout title="Dashboard">
       <div className="space-y-6">

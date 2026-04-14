@@ -1,19 +1,20 @@
 import { API } from "@/src/lib/axios";
+import { handleRequest } from "../lib/utils";
 
-// ✅ Project messages
+// backend returns messages array directly: res.json(messages)
 export const getProjectMessages = async (projectId: string) => {
-  const res = await API.get(`/messages/project/${projectId}`);
-  return res.data;
+  const res = await handleRequest(API.get(`/messages/project/${projectId}`));
+  return Array.isArray(res) ? res : [];
 };
 
-// ✅ DM messages
+// backend returns messages array directly: res.json(messages)
 export const getConversationMessages = async (conversationId: string) => {
-  const res = await API.get(`/messages/conversation/${conversationId}`);
-  return res.data;
+  const res = await handleRequest(API.get(`/messages/conversation/${conversationId}`));
+  return Array.isArray(res) ? res : [];
 };
 
-// ✅ Create / get conversation
+// backend returns conversation object directly: res.json(conversation)
 export const createConversation = async (receiverId: string) => {
-  const res = await API.post("/conversations", { receiverId });
-  return res.data;
+  const res = await handleRequest(API.post("/conversations", { receiverId }));
+  return res || null;
 };

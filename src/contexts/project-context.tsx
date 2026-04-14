@@ -150,7 +150,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const getProjectById = async (id: string) => {
     try {
       const res = await getProjectByIdAPI(id);
-
+      if (!res?.project) return null;
       return {
         ...res.project,
         role: res.role,
