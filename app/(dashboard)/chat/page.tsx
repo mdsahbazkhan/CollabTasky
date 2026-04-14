@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useUser } from "@/src/contexts/user-context";
 import { useProjects, Project } from "@/src/contexts/project-context";
 import { getAllUsers } from "@/src/services/auth.service";
@@ -78,9 +79,10 @@ export default function ChatPage() {
 function ChatContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user: currentUser } = useUser();
-  const { projects, fetchProjects } = useProjects();
+  const { user: currentUser, loading: userLoading } = useUser();
+  const { projects, fetchProjects, loading: projectsLoading } = useProjects();
   const [allUsers, setAllUsers] = React.useState<ChatUser[]>([]);
+  const [usersLoading, setUsersLoading] = React.useState(true);
   const [selectedChat, setSelectedChat] = React.useState<SelectedChat | null>(
     null,
   );
@@ -92,15 +94,20 @@ function ChatContent() {
   const [isTyping, setIsTyping] = React.useState(false);
   const typingTimeout = React.useRef<any>(null);
   const [onlineUsers, setOnlineUsers] = React.useState<string[]>([]);
+  const [mobileChatListOpen, setMobileChatListOpen] = React.useState(false);
 
   React.useEffect(() => {
+    if (userLoading) return;
     if (projects.length === 0) fetchProjects();
+    setUsersLoading(true);
     getAllUsers()
       .then((data) => setAllUsers(data || []))
-      .catch((err) => console.error("Failed to load users:", err));
-  }, []);
+      .catch((err) => console.error("Failed to load users:", err))
+      .finally(() => setUsersLoading(false));
+  }, [userLoading]);
 
   React.useEffect(() => {
+    if (userLoading) return;
     const userId = searchParams.get("userId");
     if (userId && allUsers.length > 0) {
       const user = allUsers.find((u) => u._id === userId);
@@ -109,7 +116,7 @@ function ChatContent() {
         router.replace("/chat");
       }
     }
-  }, [searchParams, allUsers, router]);
+  }, [searchParams, allUsers, router, userLoading]);
 
   React.useEffect(() => {
     socket.connect();
@@ -142,7 +149,7 @@ function ChatContent() {
   }, []);
 
   React.useEffect(() => {
-    if (!currentUser?._id) return;
+    if (userLoading || !currentUser?._id) return;
     
     const handleConnect = () => {
       socket.emit("addUser", currentUser._id);
@@ -158,7 +165,7 @@ function ChatContent() {
     return () => {
       socket.off("connect", handleConnect);
     };
-  }, [currentUser?._id]);
+  }, [currentUser?._id, userLoading]);
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -284,7 +291,11 @@ function ChatContent() {
                   My Projects
                 </span>
               </div>
-              {projects.length === 0 ? (
+              {projectsLoading ? (
+                <p className="px-2 py-1 text-xs text-muted-foreground">
+                  Loading projects...
+                </p>
+              ) : projects.length === 0 ? (
                 <p className="px-2 py-1 text-xs text-muted-foreground">
                   No projects yet
                 </p>
@@ -316,7 +327,11 @@ function ChatContent() {
                   Direct Messages
                 </span>
               </div>
-              {allUsers.filter((u) => u._id !== currentUser?._id).length ===
+              {usersLoading ? (
+                <p className="px-2 py-1 text-xs text-muted-foreground">
+                  Loading users...
+                </p>
+              ) : allUsers.filter((u) => u._id !== currentUser?._id).length ===
               0 ? (
                 <p className="px-2 py-1 text-xs text-muted-foreground">
                   No users found
@@ -368,9 +383,110 @@ function ChatContent() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Users className="h-4 w-4" />
-              </Button>
+              <Popover open={mobileChatListOpen} onOpenChange={setMobileChatListOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Users className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="start">
+                  <div className="flex flex-col border-r border-border bg-card">
+                    <div className="flex h-12 items-center justify-between border-b border-border px-3">
+                      <span className="font-semibold text-foreground">Chats</span>
+                    </div>
+                    <ScrollArea className="h-[60vh] px-2">
+                      <div className="py-2">
+                        <div className="px-2 py-1">
+                          <span className="text-xs font-semibold uppercase text-muted-foreground">
+                            My Projects
+                          </span>
+                        </div>
+                        {projectsLoading ? (
+                          <p className="px-2 py-1 text-xs text-muted-foreground">
+                            Loading projects...
+                          </p>
+                        ) : projects.length === 0 ? (
+                          <p className="px-2 py-1 text-xs text-muted-foreground">
+                            No projects yet
+                          </p>
+                        ) : (
+                          projects.map((project) => (
+                            <button
+                              key={project._id}
+                              onClick={() => {
+                                selectProject(project);
+                                setMobileChatListOpen(false);
+                              }}
+                              className={cn(
+                                "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
+                                selectedChat?.type === "project" &&
+                                  selectedChat.data._id === project._id
+                                  ? "bg-primary/10 text-foreground"
+                                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                              )}
+                            >
+                              <FolderKanban className="h-4 w-4 shrink-0" />
+                              <span className="truncate">{project.name}</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+
+                      <Separator className="my-2" />
+
+                      <div className="py-2">
+                        <div className="px-2 py-1">
+                          <span className="text-xs font-semibold uppercase text-muted-foreground">
+                            Direct Messages
+                          </span>
+                        </div>
+                        {usersLoading ? (
+                          <p className="px-2 py-1 text-xs text-muted-foreground">
+                            Loading users...
+                          </p>
+                        ) : allUsers.filter((u) => u._id !== currentUser?._id).length ===
+                        0 ? (
+                          <p className="px-2 py-1 text-xs text-muted-foreground">
+                            No users found
+                          </p>
+                        ) : (
+                          allUsers
+                            .filter((u) => u._id !== currentUser?._id)
+                            .map((u) => (
+                              <button
+                                key={u._id}
+                                onClick={() => {
+                                  selectDM(u);
+                                  setMobileChatListOpen(false);
+                                }}
+                                className={cn(
+                                  "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
+                                  selectedChat?.type === "dm" &&
+                                    selectedChat.data._id === u._id
+                                    ? "bg-primary/10 text-foreground"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                                )}
+                              >
+                                <div className="relative shrink-0">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarImage src={u.avatar} alt={u.name} />
+                                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                                      {getInitials(u.name)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  {onlineUsers.includes(u._id.toString()) && (
+                                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card bg-green-500" />
+                                  )}
+                                </div>
+                                <span className="truncate">{u.name}</span>
+                              </button>
+                            ))
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Search className="h-4 w-4" />
               </Button>
