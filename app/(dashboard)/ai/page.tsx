@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
+import { toast } from "sonner";
+import { useUser } from "@/src/contexts/user-context";
 import {
   Sparkles,
   Send,
@@ -23,6 +25,8 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
+import { sendMessageToAI } from "@/src/services/ai.service";
+import { AvatarImage } from "@radix-ui/react-avatar";
 
 interface Message {
   id: string;
@@ -30,17 +34,14 @@ interface Message {
   content: string;
   timestamp: string;
 }
-
 const initialMessages: Message[] = [
   {
     id: "1",
     role: "assistant",
-    content:
-      "Hello! I'm your AI project assistant. I can help you with task management, writing documentation, generating code snippets, brainstorming ideas, and more. How can I help you today?",
+    content: "Hello! I'm your AI project assistant. How can I help you today?",
     timestamp: "Now",
   },
 ];
-
 const suggestions = [
   { icon: Lightbulb, text: "Generate project ideas", color: "text-yellow-500" },
   { icon: FileText, text: "Write documentation", color: "text-blue-500" },
@@ -53,18 +54,36 @@ const suggestions = [
 ];
 
 export default function AIAssistantPage() {
+  const { user, loading, switchRole, isAdmin } = useUser();
   const [messages, setMessages] = React.useState<Message[]>(initialMessages);
   const [input, setInput] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const scrollRef = React.useRef<HTMLDivElement>(null);
-
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const userInitials = user?.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "?";
+  const userAvatar = user?.avatar || "";
+  const userName = user?.name || "Guest";
+  React.useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages, isLoading]);
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
+
+    const currentMessage = input;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: input,
+      content: currentMessage,
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -72,43 +91,41 @@ export default function AIAssistantPage() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const res = await sendMessageToAI(currentMessage);
 
-    const aiResponses: Record<string, string> = {
-      project:
-        "I'd be happy to help you generate project ideas! Based on current trends and your team's capabilities, here are some suggestions:\n\n1. **Customer Portal Redesign** - Modernize the customer-facing dashboard with improved UX\n2. **Internal Analytics Tool** - Build a custom analytics solution for better insights\n3. **API Gateway** - Create a unified API gateway for all microservices\n\nWould you like me to elaborate on any of these ideas?",
-      documentation:
-        "I can help you write comprehensive documentation. Please share:\n\n1. **Project/Feature Name** - What are we documenting?\n2. **Target Audience** - Who will read this?\n3. **Key Points** - What should be covered?\n\nOnce you provide these details, I'll generate a well-structured document for you.",
-      code: "I'd be happy to help you with code! Please specify:\n\n1. **Programming Language** - TypeScript, Python, etc.\n2. **Framework** - React, Next.js, etc.\n3. **Functionality** - What should the code do?\n\nShare the details and I'll generate clean, well-documented code for you.",
-      default:
-        "That's a great question! I'm analyzing your request and preparing a detailed response. Based on your project context, here's what I recommend:\n\n1. **Break down the task** into smaller, manageable pieces\n2. **Set clear milestones** with deadlines\n3. **Assign responsibilities** to team members\n\nWould you like me to create a detailed action plan for this?",
-    };
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: res?.data || "No response from AI",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
 
-    const responseKey = input.toLowerCase().includes("project")
-      ? "project"
-      : input.toLowerCase().includes("documentation") ||
-          input.toLowerCase().includes("doc")
-        ? "documentation"
-        : input.toLowerCase().includes("code")
-          ? "code"
-          : "default";
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error(error);
 
-    const assistantMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant",
-      content: aiResponses[responseKey],
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: "Something went wrong. Please try again.",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
 
-    setMessages((prev) => [...prev, assistantMessage]);
-    setIsLoading(false);
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -120,6 +137,17 @@ export default function AIAssistantPage() {
 
   const handleSuggestionClick = (suggestion: string) => {
     setInput(suggestion);
+  };
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+
+      toast.success("Copied to clipboard");
+    } catch (error) {
+      console.error("Copy failed:", error);
+
+      toast.error("Failed to copy");
+    }
   };
 
   return (
@@ -159,8 +187,8 @@ export default function AIAssistantPage() {
         </div>
 
         {/* Messages */}
-        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-          <div className="space-y-6 max-w-3xl mx-auto">
+        <ScrollArea className="flex-1 p-4 min-h-0" ref={scrollRef}>
+          <div className="mx-auto flex min-h-full max-w-3xl flex-col space-y-6">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -183,9 +211,12 @@ export default function AIAssistantPage() {
                       </div>
                     </AvatarFallback>
                   ) : (
-                    <AvatarFallback className="bg-secondary text-secondary-foreground">
-                      JD
-                    </AvatarFallback>
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={userAvatar} alt={userName} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                        {userInitials}
+                      </AvatarFallback>
+                    </Avatar>
                   )}
                 </Avatar>
                 <div
@@ -201,7 +232,7 @@ export default function AIAssistantPage() {
                         : "bg-muted",
                     )}
                   >
-                    <CardContent className="p-3">
+                    <CardContent>
                       <p className="text-sm whitespace-pre-wrap">
                         {message.content}
                       </p>
@@ -216,7 +247,13 @@ export default function AIAssistantPage() {
                     <span>{message.timestamp}</span>
                     {message.role === "assistant" && (
                       <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <Button
+                          title="Copy response"
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => handleCopy(message.content)}
+                        >
                           <Copy className="h-3 w-3" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -267,6 +304,7 @@ export default function AIAssistantPage() {
                 </Card>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
 
@@ -294,7 +332,7 @@ export default function AIAssistantPage() {
         )}
 
         {/* Input */}
-        <div className="border-t border-border p-4">
+        <div className="shrink-0 border-t border-border p-4">
           <div className="flex items-center gap-2 max-w-3xl mx-auto">
             <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0">
               <Paperclip className="h-5 w-5" />
