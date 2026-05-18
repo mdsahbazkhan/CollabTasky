@@ -24,6 +24,7 @@ import {
   Code,
   MessageSquare,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { cn } from "@/src/lib/utils";
 import { sendMessageToAI } from "@/src/services/ai.service";
 import { AvatarImage } from "@radix-ui/react-avatar";
@@ -38,14 +39,26 @@ const initialMessages: Message[] = [
   {
     id: "1",
     role: "assistant",
-    content: "Hello! I'm your AI project assistant. How can I help you today?",
+    content: "Hello! I'm your CollabTasky assistant. How can I help you today?",
     timestamp: "Now",
   },
 ];
 const suggestions = [
-  { icon: Lightbulb, text: "Generate project ideas", color: "text-yellow-500" },
-  { icon: FileText, text: "Write documentation", color: "text-blue-500" },
-  { icon: Code, text: "Create code snippets", color: "text-green-500" },
+  {
+    icon: Lightbulb,
+    text: "Create roadmap for SaaS app",
+    color: "text-yellow-500",
+  },
+  {
+    icon: FileText,
+    text: "Generate API documentation",
+    color: "text-blue-500",
+  },
+  {
+    icon: Code,
+    text: "Break down authentication feature",
+    color: "text-green-500",
+  },
   {
     icon: MessageSquare,
     text: "Summarize meeting notes",
@@ -96,8 +109,12 @@ export default function AIAssistantPage() {
     setIsLoading(true);
 
     try {
-      const res = await sendMessageToAI(currentMessage);
-
+      const updatedMessages = [...messages, userMessage];
+      const formatedMessages = updatedMessages.map((msg) => ({
+        role: msg.role === "assistant" ? "assistant" : "user",
+        content: String(msg.content),
+      }));
+      const res = await sendMessageToAI(formatedMessages);
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
@@ -133,6 +150,10 @@ export default function AIAssistantPage() {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleNewChat = () => {
+    setMessages(initialMessages);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -179,7 +200,12 @@ export default function AIAssistantPage() {
             >
               Online
             </Badge>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleNewChat}
+            >
               <RotateCcw className="h-4 w-4" />
               <span className="sr-only">Reset conversation</span>
             </Button>
@@ -227,15 +253,18 @@ export default function AIAssistantPage() {
                 >
                   <Card
                     className={cn(
+                      message.role === "assistant" &&
+                        "animate-in fade-in duration-300",
+
                       message.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted",
                     )}
                   >
-                    <CardContent>
-                      <p className="text-sm whitespace-pre-wrap">
-                        {message.content}
-                      </p>
+                    <CardContent className="p-3">
+                      <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-6 prose-p:my-2">
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      </div>
                     </CardContent>
                   </Card>
                   <div
@@ -334,11 +363,8 @@ export default function AIAssistantPage() {
         {/* Input */}
         <div className="shrink-0 border-t border-border p-4">
           <div className="flex items-center gap-2 max-w-3xl mx-auto">
-            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0">
-              <Paperclip className="h-5 w-5" />
-            </Button>
             <Input
-              placeholder="Ask me anything about your projects..."
+              placeholder="Ask CollabTasky AI..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
