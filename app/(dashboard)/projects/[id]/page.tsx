@@ -29,6 +29,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CreateTaskModal } from "@/components/tasks/create-task-modal";
+import { TaskDetailsPanel } from "@/components/tasks/task-details-panel";
+import type { Task } from "@/app/(dashboard)/tasks/page";
 import { ProjectAIChat } from "@/components/projects/project-ai-chat";
 import {
   getProjectByIdAPI,
@@ -78,6 +80,7 @@ export default function ProjectDetailsPage() {
     name: string;
     role: string;
   } | null>(null);
+  const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const fetchProject = async () => {
     try {
       const projectData = await getProjectByIdAPI(projectId);
@@ -324,6 +327,22 @@ export default function ProjectDetailsPage() {
     }
     return "?";
   };
+
+  const toPanelTask = (task: any): Task => ({
+    id: task._id,
+    title: task.title,
+    description: task.description || "",
+    status: task.status,
+    priority: task.priority || "medium",
+    project: project.name,
+    projectId,
+    assignee: {
+      name: task.assignedTo?.name || "Unassigned",
+      initials: getAssigneeInitials(task.assignedTo),
+    },
+    dueDate: task.dueDate || "",
+    tags: task.tags || [],
+  });
   return (
     <DashboardLayout title="Project Details">
       <div className="space-y-6">
@@ -494,7 +513,8 @@ export default function ProjectDetailsPage() {
                 tasks.map((task: any) => (
                   <Card
                     key={task._id}
-                    className="transition-colors hover:bg-muted/50"
+                    className="cursor-pointer transition-colors hover:bg-muted/50"
+                    onClick={() => setSelectedTask(toPanelTask(task))}
                   >
                     <CardContent className="flex items-center gap-4 p-4">
                       <div className="flex-1">
@@ -634,7 +654,10 @@ export default function ProjectDetailsPage() {
           </TabsContent>
 
           <TabsContent value="ai" className="space-y-4">
-            <ProjectAIChat projectId={projectId} />
+            <ProjectAIChat
+              projectId={projectId}
+              onTasksCreated={handleTaskCreated}
+            />
           </TabsContent>
         </Tabs>
 
@@ -643,6 +666,15 @@ export default function ProjectDetailsPage() {
           onOpenChange={setIsCreateTaskModalOpen}
           projectId={projectId}
           teamMembers={teamMembers}
+          onSuccess={handleTaskCreated}
+        />
+        <TaskDetailsPanel
+          task={selectedTask}
+          open={!!selectedTask}
+          onOpenChange={(open) => !open && setSelectedTask(null)}
+          projects={[
+            { _id: projectId, name: project.name, members: teamMembers },
+          ]}
           onSuccess={handleTaskCreated}
         />
         <AddMemberModal

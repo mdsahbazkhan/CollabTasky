@@ -25,12 +25,21 @@ import ReactMarkdown from "react-markdown";
 import { cn } from "@/src/lib/utils";
 import { sendProjectAIMessage } from "@/src/services/ai.service";
 import { AvatarImage } from "@radix-ui/react-avatar";
+import AITaskPreview from "@/components/ai/ai-task-preview";
+
+interface TaskSuggestion {
+  title: string;
+  description: string;
+  priority: string;
+  status: string;
+}
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+  tasks?: TaskSuggestion[];
 }
 
 const getInitialMessages = (): Message[] => [
@@ -66,7 +75,13 @@ const suggestions = [
   },
 ];
 
-export function ProjectAIChat({ projectId }: { projectId: string }) {
+export function ProjectAIChat({
+  projectId,
+  onTasksCreated,
+}: {
+  projectId: string;
+  onTasksCreated?: () => void;
+}) {
   const { user } = useUser();
   const storageKey = `ai-chat-${projectId}`;
   const [messages, setMessages] = React.useState<Message[]>(() => {
@@ -137,16 +152,27 @@ export function ProjectAIChat({ projectId }: { projectId: string }) {
         currentMessage,
         priorMessages,
       );
-
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: res?.message || "No response from AI",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
+      const assistantMessage: Message =
+        res?.type === "task_generation"
+          ? {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content: "Here are some suggested tasks for this project:",
+              timestamp: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              tasks: res.data.tasks,
+            }
+          : {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content: res?.message || "No response from AI",
+              timestamp: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            };
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
@@ -173,6 +199,36 @@ export function ProjectAIChat({ projectId }: { projectId: string }) {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleTaskPreviewCreate = (
+    messageId: string,
+    createdTasks: TaskSuggestion[],
+  ) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId
+          ? {
+              ...m,
+              tasks: undefined,
+              content: `Created ${createdTasks.length} task${
+                createdTasks.length === 1 ? "" : "s"
+              }: ${createdTasks.map((t) => t.title).join(", ")}`,
+            }
+          : m,
+      ),
+    );
+    onTasksCreated?.();
+  };
+
+  const handleTaskPreviewDiscard = (messageId: string) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId
+          ? { ...m, tasks: undefined, content: "Task suggestions discarded." }
+          : m,
+      ),
+    );
   };
 
   const handleNewChat = () => {
@@ -274,7 +330,8 @@ export function ProjectAIChat({ projectId }: { projectId: string }) {
               </Avatar>
               <div
                 className={cn(
-                  "max-w-[80%] space-y-2",
+                  "space-y-2",
+                  message.tasks?.length ? "max-w-full flex-1 sm:max-w-xl" : "max-w-[80%]",
                   message.role === "user" && "text-right",
                 )}
               >
@@ -293,6 +350,16 @@ export function ProjectAIChat({ projectId }: { projectId: string }) {
                     </div>
                   </CardContent>
                 </Card>
+                {message.tasks && message.tasks.length > 0 && (
+                  <AITaskPreview
+                    projectId={projectId}
+                    tasks={message.tasks}
+                    onCreate={(selectedTasks) =>
+                      handleTaskPreviewCreate(message.id, selectedTasks)
+                    }
+                    onDiscard={() => handleTaskPreviewDiscard(message.id)}
+                  />
+                )}
                 <div
                   className={cn(
                     "flex items-center gap-2 text-xs text-muted-foreground",
@@ -383,7 +450,6 @@ export function ProjectAIChat({ projectId }: { projectId: string }) {
           </div>
         </div>
       )}
-
       {/* Input */}
       <div className="shrink-0 border-t border-border p-4">
         <div className="flex items-center gap-2 max-w-3xl mx-auto">
