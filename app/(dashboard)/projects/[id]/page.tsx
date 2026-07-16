@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CreateTaskModal } from "@/components/tasks/create-task-modal";
+import { ProjectAIChat } from "@/components/projects/project-ai-chat";
 import {
   getProjectByIdAPI,
   removeMember,
@@ -475,6 +476,7 @@ export default function ProjectDetailsPage() {
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="team">Team</TabsTrigger>
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="ai">AI Chat</TabsTrigger>
           </TabsList>
 
           <TabsContent value="tasks" className="space-y-4">
@@ -629,6 +631,10 @@ export default function ProjectDetailsPage() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="ai" className="space-y-4">
+            <ProjectAIChat projectId={projectId} />
           </TabsContent>
         </Tabs>
 
