@@ -347,17 +347,19 @@ export default function ProjectDetailsPage() {
     <DashboardLayout title="Project Details">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/projects">
               <ArrowLeft className="h-4 w-4" />
               <span className="sr-only">Back to projects</span>
             </Link>
           </Button>
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <div className={`h-3 w-3 rounded-full ${project.color}`} />
-              <h1 className="text-2xl font-bold text-foreground">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-3">
+              <div
+                className={`h-3 w-3 shrink-0 rounded-full ${project.color}`}
+              />
+              <h1 className="break-words text-2xl font-bold text-foreground">
                 {project.name}
               </h1>
               <Badge variant="outline">{project.role?.toUpperCase()}</Badge>
@@ -491,12 +493,14 @@ export default function ProjectDetailsPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="tasks" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
-            <TabsTrigger value="team">Team</TabsTrigger>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="ai">AI Chat</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList>
+              <TabsTrigger value="tasks">Tasks</TabsTrigger>
+              <TabsTrigger value="team">Team</TabsTrigger>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="ai">AI Chat</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="tasks" className="space-y-4">
             <div className="flex items-center justify-between">

@@ -85,10 +85,10 @@ export default function AITaskPreview({
   return (
     <div className="flex max-h-128 flex-col overflow-hidden rounded-xl border border-border bg-card">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border px-5 py-4">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-2 border-b border-border px-5 py-4">
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
+            <Sparkles className="h-5 w-5 shrink-0 text-primary" />
             <h2 className="text-lg font-semibold text-foreground">
               AI Task Suggestions
             </h2>
@@ -175,7 +175,7 @@ export default function AITaskPreview({
       </div>
 
       {/* Footer */}
-      <div className="sticky bottom-0 flex items-center justify-between rounded-b-xl border-t border-border bg-card/95 px-5 py-3 backdrop-blur supports-backdrop-filter:bg-card/80">
+      <div className="sticky bottom-0 flex flex-col gap-2 rounded-b-xl border-t border-border bg-card/95 px-5 py-3 backdrop-blur supports-backdrop-filter:bg-card/80 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           {selectedCount} of {tasks.length}{" "}
           {tasks.length === 1 ? "task" : "tasks"} selected

@@ -22,6 +22,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
 import { cn } from "@/src/lib/utils";
 import { sendProjectAIMessage } from "@/src/services/ai.service";
 import { AvatarImage } from "@radix-ui/react-avatar";
@@ -256,11 +257,11 @@ export function ProjectAIChat({
   };
 
   return (
-    <div className="flex h-[calc(100vh-16rem)] flex-col overflow-hidden rounded-lg border border-border bg-card">
+    <div className="flex h-144 max-h-[70vh] flex-col overflow-hidden rounded-lg border border-border bg-card">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg">
+      <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">
             <Image
               src="/favicon.svg"
               alt="CollabTasky AI"
@@ -269,17 +270,19 @@ export function ProjectAIChat({
               className="h-full w-full object-cover"
             />
           </div>
-          <div>
-            <h2 className="font-semibold text-foreground">Project AI Chat</h2>
-            <p className="text-xs text-muted-foreground">
+          <div className="min-w-0">
+            <h2 className="truncate font-semibold text-foreground">
+              Project AI Chat
+            </h2>
+            <p className="truncate text-xs text-muted-foreground">
               Ask about this project's tasks and progress
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <Badge
             variant="secondary"
-            className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+            className="hidden bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 sm:inline-flex"
           >
             Online
           </Badge>
@@ -345,8 +348,21 @@ export function ProjectAIChat({
                   )}
                 >
                   <CardContent className="p-3">
-                    <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-6 prose-p:my-2">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    <div
+                      className={cn(
+                        "prose prose-sm max-w-none dark:prose-invert",
+                        "prose-p:my-2 prose-p:leading-6",
+                        "prose-ul:my-2 prose-ol:my-2 prose-li:my-1",
+                        "prose-strong:font-semibold",
+                        message.role === "user"
+                          ? "prose-strong:text-primary-foreground"
+                          : "prose-strong:text-foreground",
+                        "prose-headings:mb-1 prose-headings:mt-3 prose-headings:font-semibold",
+                      )}
+                    >
+                      <ReactMarkdown remarkPlugins={[remarkBreaks]}>
+                        {message.content}
+                      </ReactMarkdown>
                     </div>
                   </CardContent>
                 </Card>
